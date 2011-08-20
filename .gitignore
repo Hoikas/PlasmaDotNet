@@ -1,0 +1,8 @@
+bin/
+obj/
+WhoM/
+
+*.exe
+*.suo
+
+[Tt]humbs.db
