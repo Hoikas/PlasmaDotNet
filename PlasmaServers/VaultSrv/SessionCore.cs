@@ -34,7 +34,7 @@ namespace Plasma {
             try {
                 fDb = pnDatabase.Connect();
             } catch (pnDbException e) {
-                fLog.Error(e);
+                Error(e);
                 return false;
             }
 

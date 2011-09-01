@@ -38,8 +38,12 @@ namespace Plasma {
         public override void Write(hsStream s) {
             s.WriteUInt(fTransID);
             s.WriteUInt(fPingTimeMs);
-            s.WriteInt(fPayload.Length);
-            s.WriteBytes(fPayload);
+            if (fPayload == null)
+                s.WriteInt(0);
+            else {
+                s.WriteInt(fPayload.Length);
+                s.WriteBytes(fPayload);
+            }
         }
     }
 

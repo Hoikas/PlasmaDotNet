@@ -23,6 +23,7 @@ namespace Plasma{
             acct.AddColumn("Password", typeof(OpenSSL.Hash));
             acct.AddColumn("Permissions", typeof(int)); // I wanted to use SByte, but that causes an InvalidCastException...
             acct.AddColumn("Guid", typeof(Guid));
+            acct.AddKey("Guid");
             acct.Name = "Accounts";
             acct.PrimaryKey = "Idx";
             acct.Execute(db);
@@ -34,6 +35,8 @@ namespace Plasma{
             player.AddColumn("PlayerIdx", typeof(uint));
             player.AddColumn("Name", typeof(string), pnColumnOption.VariableSize);
             player.AddColumn("Model", typeof(string), pnColumnOption.VariableSize);
+            player.AddKey("AcctIdx");
+            player.AddKey("PlayerIdx");
             player.Name = "Players";
             player.PrimaryKey = "Idx";
             player.Execute(db);

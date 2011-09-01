@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using OpenSSL;
 
 namespace Plasma {
@@ -13,9 +14,10 @@ namespace Plasma {
         protected plBufferedStream fStream;
         protected Socket fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
         protected pnCli2Srv_Connect fConnHdr = new pnCli2Srv_Connect();
+        ManualResetEvent fWaitOnConnect = new ManualResetEvent(false);
 
         protected IPAddress fHost;
-        protected int fPort;
+        protected int fPort = 14617;
 
         private byte[] fN;
         private byte[] fX;
@@ -31,6 +33,10 @@ namespace Plasma {
         public uint BuildID {
             get { return fConnHdr.fBuildID; }
             set { fConnHdr.fBuildID = value; }
+        }
+
+        public bool Connected {
+            get { return fSocket.Connected; }
         }
 
         public string Host {
@@ -80,8 +86,34 @@ namespace Plasma {
             set { fConnHdr.fProtocolVer = value; }
         }
 
-        public virtual void Connect() {
-            fSocket.Connect(fHost, fPort);
+        public void Connect() {
+            // We're probably not going to get any performance increase from ConnectAsync
+            // because (in most cases) we will only connect a client once, then throw it away.
+            fSocket.BeginConnect(fHost, fPort, new AsyncCallback(IOnConnect), null);
+        }
+
+        private void IOnConnect(IAsyncResult ar) {
+            fSocket.EndConnect(ar);
+            IOnConnect();
+        }
+
+        protected virtual void IOnConnect() {
+            fWaitOnConnect.Set();
+        }
+
+        /// <summary>
+        /// Blocks the current thread until a connection has been established.
+        /// </summary>
+        public void WaitForConnection() {
+            fWaitOnConnect.Reset();
+        }
+
+        public void Close() {
+            if (fStream != null) fStream.Close();
+            fSocket.Shutdown(SocketShutdown.Both); // Be nice
+            fSocket.Close();
+            fCallbacks.Clear();
+            fWaitOnConnect.Reset();
         }
 
         protected void FireCallback(uint transID, object[] param) {
@@ -110,23 +142,11 @@ namespace Plasma {
             return trans;
         }
 
-        protected bool INetCliConnect(int gval) {
-            // Create a temporary NetworkStream for us to use
-            NetworkStream ns = new NetworkStream(fSocket, false);
-            plBufferedStream bs = new plBufferedStream(ns);
-
-            // Client side setup
+        protected bool INetCliConnect(plBufferedStream bs, int gval) {
             byte[] cli = ISetupKeys(bs, gval);
-            bs.Flush();
-
-            // Server response
             byte[] srv = IReadNetClientEncrypt(bs);
             if (srv == null) return false;
             ISetupEncryption(srv, cli);
-
-            // Cleanup!
-            bs.Close();
-            ns.Close();
 
             return true;
         }
@@ -141,7 +161,7 @@ namespace Plasma {
             fStream = new plBufferedStream(new pnRC4SocketStream(fSocket, key));
         }
 
-        private byte[] ISetupKeys(hsStream s, int gval) {
+        private byte[] ISetupKeys(plBufferedStream s, int gval) {
             BigNum b = BigNum.Random(512);
             BigNum n = new BigNum(fN);
             BigNum x = new BigNum(fX);
@@ -162,7 +182,7 @@ namespace Plasma {
             return cliSeed;
         }
 
-        private byte[] IReadNetClientEncrypt(hsStream s) {
+        private byte[] IReadNetClientEncrypt(plBufferedStream s) {
             try {
                 if (s.ReadByte() != plNetCore.kNetCliEncrypt) return null;
                 if (s.ReadByte() != 9) return null;
@@ -172,10 +192,11 @@ namespace Plasma {
             }
         }
 
-        private void IWriteNetClientConnect(hsStream s, byte[] seed) {
+        private void IWriteNetClientConnect(plBufferedStream s, byte[] seed) {
             s.WriteByte(plNetCore.kNetCliConnect);
             s.WriteByte(66);
             s.WriteBytes(seed);
+            s.Flush();
         }
     }
 
@@ -199,5 +220,9 @@ namespace Plasma {
             get { return fParam; }
             set { fParam = value; }
         }
+
+        public pnCallback() { }
+        public pnCallback(Delegate cb) { fFunction = cb; }
+        public pnCallback(Delegate cb, object param) { fFunction = cb; fParam = param; }
     }
 }

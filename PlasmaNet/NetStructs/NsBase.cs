@@ -11,7 +11,7 @@ namespace Plasma {
         public uint fBranchID;
         public Guid fProductUuid;
 
-        private const ushort kHeaderSize = 31;
+        public const ushort kHeaderSize = 31;
 
         public void Read(hsStream s) {
             fType = (ENetProtocol)s.ReadByte();

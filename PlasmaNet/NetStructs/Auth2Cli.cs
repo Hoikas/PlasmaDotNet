@@ -228,4 +228,31 @@ namespace Plasma {
             pnHelpers.WriteString(s, fShape, 64);
         }
     }
+
+    public class pnAuth2Cli_VaultNodeRefsFetched : plNetStruct {
+
+        public uint fTransID;
+        public ENetError fResult;
+        public pnVaultNodeRef[] fNodeRefs;
+
+        protected override ushort MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultNodeRefsFetched; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+            fNodeRefs = new pnVaultNodeRef[s.ReadInt()];
+            for (int i = 0; i < fNodeRefs.Length; i++)
+                fNodeRefs[i].Read(s);
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            s.WriteInt(fNodeRefs.Length);
+            foreach (pnVaultNodeRef r in fNodeRefs)
+                r.Write(s);
+        }
+    }
 }

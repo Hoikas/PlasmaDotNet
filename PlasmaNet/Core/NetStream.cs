@@ -132,6 +132,11 @@ namespace Plasma {
         }
 
         public static void WriteString(hsStream s, string data, int maxSize) {
+            if (data == null) {
+                s.WriteShort(0);
+                return;
+            }
+
             byte[] buf;
             if (data.Length > maxSize)
                 buf = Encoding.Unicode.GetBytes(data.Remove(maxSize));

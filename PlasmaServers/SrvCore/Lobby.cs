@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -12,73 +13,52 @@ namespace Plasma {
         plDebugLog fLog = plDebugLog.GetLog("Lobby");
 
         pnAuthServer fAuth;
+        pnVaultServer fVault;
+
+        SocketAsyncEventArgs fAcceptArgs = new SocketAsyncEventArgs();
+        const int kAcceptBufferMinSize = 288;
 
         public pnLobby(bool auth, bool file, bool game, bool gate, bool lookup, bool vault) {
             if (auth) {
                 fAuth = new pnAuthServer();
                 fAuth.CheckDb();
             }
-        }
 
-        public void InteractiveConsole() {
-            while (true) {
-                Console.Write("$ ");
-                string line = Console.ReadLine();
-                string lower = line.ToLower();
-                
-                if (lower == "exit" || lower == "quit")
-                    break;
-                else if (lower == "show copyright") {
-                    Console.WriteLine("This program is free software: you can redistribute it and/or modify");
-                    Console.WriteLine("it under the terms of the GNU Affero General Public License as published by");
-                    Console.WriteLine("the Free Software Foundation, either version 3 of the License, or");
-                    Console.WriteLine("(at your option) any later version.");
-                } else if (lower == "show warranty") {
-                    Console.WriteLine("This program is distributed in the hope that it will be useful,");
-                    Console.WriteLine("but WITHOUT ANY WARRANTY; without even the implied warranty of");
-                    Console.WriteLine("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
-                    Console.WriteLine("GNU Affero General Public License for more details.");
-                } 
-
-                Console.WriteLine();
+            if (vault) {
+                fVault = new pnVaultServer();
+                fVault.CheckDb();
             }
         }
-
 
         public void Listen() {
             if (fSocket == null)
                 ISetupSocket();
-            fSocket.BeginAccept(new AsyncCallback(IAcceptConnection), null);
+
+            if (!fSocket.AcceptAsync(fAcceptArgs))
+                IAcceptConnection(fSocket.Accept());
         }
 
-        private void IAcceptConnection(IAsyncResult ar) {
-            Socket cli = null;
-            pnCli2Srv_Connect hdr = null;
-
-            // Sanely handle any stupid. We do NOT want to kill this thread!
-            try {
-                cli = fSocket.EndAccept(ar);
-                cli.ReceiveTimeout = 100; // We don't want to hold this thread up long. 
-                NetworkStream ns = new NetworkStream(cli, false);
-                plBufferedStream bs = new plBufferedStream(ns);
-
-                hdr = new pnCli2Srv_Connect();
-                hdr.Read(bs);
-
-                bs.Close();
-                ns.Close();
-            } catch (Exception e) {
-#if DEBUG
-                throw e;
-#else
-                fLog.Error("Failed to accept incoming connection: " + e.GetType().ToString());
-                fLog.Error(e.ToString());
-#endif
-                Listen();
-                return;
+        private void IOnAsyncAccept(object sender, SocketAsyncEventArgs args) {
+            if (args.SocketError == SocketError.Success) {
+                IAcceptConnection(args.AcceptSocket);
+            } else {
+                args.AcceptSocket.Close();
             }
-            
-            // Now, let's send this client to where it needs to go...
+
+            fAcceptArgs.AcceptSocket = null;
+            Listen();
+        }
+
+        private void IAcceptConnection(Socket cli) {
+            hsStream s = new hsStream(new NetworkStream(cli, false));
+            pnCli2Srv_Connect hdr = new pnCli2Srv_Connect();
+            hdr.Read(s);
+            s.Close();
+
+            IAcceptConnection(cli, hdr);
+        }
+
+        private void IAcceptConnection(Socket cli, pnCli2Srv_Connect hdr) {
             pnIniParser ini = pngIni.Ini;
             switch (hdr.fType) {
                 case ENetProtocol.kConnTypeCliToAuth:
@@ -105,13 +85,21 @@ namespace Plasma {
                     throw new NotImplementedException();
                 case ENetProtocol.kConnTypeCliToGate:
                     throw new NotImplementedException();
+                case ENetProtocol.kConnTypeSrvToLookup:
+                    throw new NotImplementedException();
+                case ENetProtocol.kConnTypeSrvToVault:
+                    if (!ITestServerGuid(hdr)) {
+                        cli.Close();
+                        break;
+                    }
+
+                    fVault.EatClient(cli, hdr);
+                    break;
                 default:
                     // Unknown protocol, boot the client on principle.
                     cli.Close();
                     break;
             }
-
-            Listen();
         }
 
         private void ISetupSocket() {
@@ -132,6 +120,7 @@ namespace Plasma {
                 throw new pnBindException("Failed to bind to socket.", e);
             }
 
+            fAcceptArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IOnAsyncAccept);
             fSocket.Listen(10);
         }
 
@@ -151,9 +140,16 @@ namespace Plasma {
         }
 
         private bool ITestClientGuid(pnCli2Srv_Connect hdr) {
-            Guid? product = pngIni.Ini.GetGuid("Client.ProductID");
-            if (product.HasValue)
-                return hdr.fProductUuid == product.Value;
+            Guid product = pngIni.Ini.GetGuid("Client.ProductID");
+            if (product != Guid.Empty)
+                return hdr.fProductUuid == product;
+            return true;
+        }
+
+        private bool ITestServerGuid(pnCli2Srv_Connect hdr) {
+            Guid product = pngIni.Ini.GetGuid("Server.ProductID");
+            if (product != Guid.Empty)
+                return hdr.fProductUuid == product;
             return true;
         }
         #endregion

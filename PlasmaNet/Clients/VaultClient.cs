@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -12,27 +13,20 @@ namespace Plasma {
             fConnHdr.fType = ENetProtocol.kConnTypeSrvToVault;
         }
 
-        public override void Connect() {
-            base.Connect();
-
-            // Temporary writer
-            NetworkStream ns = new NetworkStream(fSocket, false);
-            plBufferedStream bs = new plBufferedStream(ns);
-
+        protected override void IOnConnect() {
             // Write out the lobby header & the server header
+            plBufferedStream bs = new plBufferedStream(new NetworkStream(fSocket, false));
             fConnHdr.Write(bs);
             bs.Flush();
 
-            // Take out trash
-            bs.Close();
-            ns.Close();
-
             // Encryption
-            if (!base.INetCliConnect(2011))
+            if (!base.INetCliConnect(bs, 2011))
                 throw new plNetException("Modified DH exchange failed");
+            bs.Close();
 
             // Listen
-            fSocket.BeginReceive(new byte[0], 0, 0, SocketFlags.Peek, new AsyncCallback(IReceive), null);
+            base.IOnConnect();
+            fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
         }
 
         public void CreatePlayer(Guid acct, string name, string shape, pnCallback cb) {
@@ -63,22 +57,34 @@ namespace Plasma {
         }
 
         private void IReceive(IAsyncResult ar) {
-            fSocket.EndReceive(ar);
+            try {
+                lock (fStream) {
+                    fSocket.EndReceive(ar);
 
-            lock (fStream) {
-                pnVault2Cli msgID = (pnVault2Cli)fStream.ReadUShort();
-                switch (msgID) {
-                    case pnVault2Cli.kVault2Cli_PingReply:
-                        IPingPong();
-                        break;
-                    case pnVault2Cli.kVault2Cli_PlayerCreateReply:
-                        IPlayerCreated();
-                        break;
+                    pnVault2Cli msgID = (pnVault2Cli)fStream.ReadUShort();
+                    switch (msgID) {
+                        case pnVault2Cli.kVault2Cli_PingReply:
+                            IPingPong();
+                            break;
+                        case pnVault2Cli.kVault2Cli_PlayerCreateReply:
+                            IPlayerCreated();
+                            break;
+                    }
+
+                    // Listen
+                    fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
                 }
+            } catch (EndOfStreamException) {
+                // Disconnected in a strange way
+                return;
+            } catch (SocketException) {
+                // Connection Reset OR something weird happened
+                return;
+            } catch (ObjectDisposedException e) {
+                // The client was kicked, but the socket is still alive, so just ignore.
+                if (e.ObjectName != typeof(Socket).ToString())
+                    throw e;
             }
-
-            // Listen
-            fSocket.BeginReceive(new byte[0], 0, 0, SocketFlags.Peek, new AsyncCallback(IReceive), null);
         }
 
         private void IPingPong() {

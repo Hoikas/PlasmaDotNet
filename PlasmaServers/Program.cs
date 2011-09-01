@@ -156,7 +156,7 @@ namespace Plasma {
             pnLobby lobby = new pnLobby(auth, file, game, gate, lookup, vault);
             try {
                 lobby.Listen();
-                lobby.InteractiveConsole();
+                while (true) { } // TODO: Reimplement the console. Fake busy loop until then.
             } catch (pnBindException e) {
                 Console.WriteLine("Error: " + e.Message);
                 Console.WriteLine("Reason: " + e.InnerException.Message);

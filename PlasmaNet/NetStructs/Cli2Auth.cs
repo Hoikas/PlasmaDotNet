@@ -138,6 +138,25 @@ namespace Plasma {
         }
     }
 
+    public class pnCli2Auth_AcctSetPlayerRequest : plNetStruct {
+        public uint fTransID;
+        public uint fPlayerID;
+
+        protected override ushort MsgID {
+            get { return (ushort)pnCli2Auth.kCli2Auth_AcctSetPlayerRequest; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fPlayerID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUInt(fPlayerID);
+        }
+    }
+
     public class pnCli2Auth_ClientRegisterRequest : plNetStruct {
         public uint fBuildID;
 
@@ -172,8 +191,12 @@ namespace Plasma {
         public override void Write(hsStream s) {
             s.WriteUInt(fTransID);
             s.WriteUInt(fPingTimeMs);
-            s.WriteInt(fPayload.Length);
-            s.WriteBytes(fPayload);
+            if (fPayload == null)
+                s.WriteInt(0);
+            else {
+                s.WriteInt(fPayload.Length);
+                s.WriteBytes(fPayload);
+            }
         }
     }
 
@@ -199,6 +222,26 @@ namespace Plasma {
             pnHelpers.WriteString(s, fPlayerName, 40);
             pnHelpers.WriteString(s, fShape, 260);
             pnHelpers.WriteString(s, fInvite, 260);
+        }
+    }
+
+    public class pnCli2Auth_VaultFetchNodeRefs : plNetStruct {
+
+        public uint fTransID;
+        public uint fNodeID;
+
+        protected override ushort MsgID {
+            get { return (ushort)pnCli2Auth.kCli2Auth_VaultFetchNodeRefs; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fNodeID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUInt(fNodeID);
         }
     }
 }

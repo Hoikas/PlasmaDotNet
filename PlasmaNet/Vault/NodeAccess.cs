@@ -192,9 +192,9 @@ namespace Plasma {
         public pnVaultAgeInfoListNode(pnVaultNode node) : base(node) { }
     }
 
-    public sealed class VaultPlayerInfoListNode : pnVaultFolderNode {
-        public VaultPlayerInfoListNode() : base(ENodeType.kNodePlayerInfoList) { }
-        public VaultPlayerInfoListNode(pnVaultNode node) : base(node) { }
+    public sealed class pnVaultPlayerInfoListNode : pnVaultFolderNode {
+        public pnVaultPlayerInfoListNode() : base(ENodeType.kNodePlayerInfoList) { }
+        public pnVaultPlayerInfoListNode(pnVaultNode node) : base(node) { }
     }
 
     public sealed class pnVaultImageNode : pnVaultNodeAccess {

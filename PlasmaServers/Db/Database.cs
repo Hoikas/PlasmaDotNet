@@ -61,9 +61,14 @@ namespace Plasma {
                 throw new pnDbException("Unknown Database.Type: " + type);
 
             IDataReader r = cmd.ExecuteReader();
-            uint id = (uint)r[0];
-            r.Close();
-            return id;
+            if (r.Read()) {
+                uint id = Convert.ToUInt32(r[0]);
+                r.Close();
+                return id;
+            } else {
+                r.Close();
+                unchecked { return (uint)-1; }
+            }
         }
     }
 

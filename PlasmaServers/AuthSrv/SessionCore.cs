@@ -12,6 +12,7 @@ namespace Plasma {
     public partial class pnAuthSession : pnSession {
 
         pnAuthServer fParent;
+        pnVaultClient fVaultCli = new pnVaultClient();
 
         public pnAuthSession(pnAuthServer parent, Socket s, pnCli2Srv_Connect hdr)
             : base(s, hdr) {
@@ -21,7 +22,7 @@ namespace Plasma {
         }
 
         public override void End() {
-            // TODO: Clean up any Srv2Srv connections
+            if (fVaultCli.Connected) fVaultCli.Close();
             fParent.RemoveClient(this);
         }
 
@@ -34,21 +35,29 @@ namespace Plasma {
         public bool Initialize() {
             // Read in the server specific connection header
             // If contains nothing useful here, so we'll just throw it away
-            NetworkStream ns = new NetworkStream(fSocket, false);
-            hsStream s = new hsStream(ns);
+            fSocket.Receive(new byte[20], 20, SocketFlags.None);
 
+            // Try to connect to the VaultSrv
+            pnIniParser ini = pngIni.Ini;
+            fVaultCli.Host = ini["Server.Vault"];
+            fVaultCli.N = ini["Server.Vault.N"];
+            fVaultCli.ProductID = ini.GetGuid("Server.ProductID");
+            fVaultCli.X = ini["Server.Vault.X"];
             try {
-                int size = s.ReadInt() - 4;
-                s.ReadBytes(size);
-            } catch {
-                s.Close();
-                ns.Close();
-                return false;
+                fVaultCli.Connect();
+            } catch (Exception e) {
+#if DEBUG
+                throw e;
+#else
+                Error(e, "Failed to connect to VaultSrv");
+                reply.fResult = ENetError.kNetErrInternalError;
+                reply.Send(fStream);
+                return;
+#endif
             }
 
-            s.Close();
-            ns.Close();
-
+            // Note: We won't actually connect to the VaultSrv until the player
+            //       tries to log in.
             return IInitialize("Auth");
         }
 
@@ -74,6 +83,9 @@ namespace Plasma {
                     switch (msgID) {
                         case pnCli2Auth.kCli2Auth_AcctLoginRequest:
                             ILogin();
+                            break;
+                        case pnCli2Auth.kCli2Auth_AcctSetPlayerRequest:
+                            ISetPlayer();
                             break;
                         case pnCli2Auth.kCli2Auth_ClientRegisterRequest:
                             IRegisterClient();

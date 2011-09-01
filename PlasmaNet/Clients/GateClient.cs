@@ -12,28 +12,20 @@ namespace Plasma {
             fConnHdr.fType = ENetProtocol.kConnTypeCliToGate;
         }
 
-        public override void Connect() {
-            base.Connect();
-
-            // Temporary writer
-            NetworkStream ns = new NetworkStream(fSocket, false);
-            plBufferedStream bs = new plBufferedStream(ns);
-
-            // Write out the lobby header & the server header
+        protected override void IOnConnect() {
+            plBufferedStream bs = new plBufferedStream(new NetworkStream(fSocket, false));
             fConnHdr.Write(bs);
             bs.WriteInt(20);
             pnHelpers.WriteUuid(bs, Guid.Empty);
             bs.Flush();
 
-            // Take out trash
-            bs.Close();
-            ns.Close();
-
             // Encryption
-            if (!base.INetCliConnect(4))
+            if (!base.INetCliConnect(bs, 4))
                 throw new plNetException("Modified DH exchange failed");
+            bs.Close();
 
             // Listen
+            base.IOnConnect();
             fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
         }
 

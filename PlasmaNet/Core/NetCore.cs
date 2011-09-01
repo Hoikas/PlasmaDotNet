@@ -19,9 +19,6 @@ namespace Plasma {
         public const uint Version = 50;
 
         public static string GetErrorString(ENetError result) {
-            if (result == null)
-                throw new ArgumentNullException("result");
-
             switch (result) {
                 case ENetError.kNetErrAccountAlreadyExists:
                     return "Account Already Exists";

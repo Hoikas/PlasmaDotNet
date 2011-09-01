@@ -71,8 +71,12 @@ namespace Plasma {
                 if (s.ReadByte() != plNetCore.kNetCliConnect) return null;
                 int size = (int)s.ReadByte() - 2;
                 y_data = s.ReadBytes(size);
-            } catch {
+            } catch (Exception e) {
+#if DEBUG
+                throw e;
+#else
                 return null;
+#endif
             }
 
             // Truncate the YData if it's too large

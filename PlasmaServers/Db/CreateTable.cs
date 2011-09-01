@@ -10,6 +10,7 @@ namespace Plasma {
         AutoIncrement,
         Nullable,
         VariableSize,
+        FixedSize,
     }
 
     public class pnSqlCreateTable {
@@ -21,6 +22,7 @@ namespace Plasma {
         }
 
         List<ColumnDetail> fColumns = new List<ColumnDetail>();
+        List<string> fKeys = new List<string>();
 
         private string fName;
 
@@ -49,6 +51,14 @@ namespace Plasma {
             cd.fOption = opt;
             cd.fType = type;
             fColumns.Add(cd);
+        }
+
+        /// <summary>
+        /// Adds a simple key (index) to the table.
+        /// </summary>
+        /// <remarks>At this time, each key may only contain one column</remarks>
+        public void AddKey(string name) {
+            fKeys.Add(name);
         }
 
         /// <summary>
@@ -108,13 +118,20 @@ namespace Plasma {
                 } else if (cd.fType == typeof(string)) {
                     if (cd.fOption == pnColumnOption.VariableSize)
                         options += "VARCHAR(64) ";
-                    else
+                    else if (cd.fOption == pnColumnOption.FixedSize)
+                        options += "CHAR(64) ";
+                    else {
                         options += "TEXT ";
+                        def = null; // HACK
+                    }
                 } else if (cd.fType == typeof(OpenSSL.Hash)) {
                     options += "CHAR(40) ";
                 } else if (cd.fType == typeof(Guid)) {
                     options += "CHAR(36) ";
                     def = Guid.Empty.ToString();
+                } else if (cd.fType == typeof(DateTime)) {
+                    options += "DATETIME ";
+                    def = null;
                 } else
                     throw new ArgumentException("Invalid table data type: " + cd.fType.ToString());
 
@@ -122,6 +139,8 @@ namespace Plasma {
                     options += "NOT NULL AUTO_INCREMENT";
                 else if (cd.fOption == pnColumnOption.Nullable)
                     options += "DEFAULT NULL";
+                else if (def == null)
+                    options += "NOT NULL";
                 else
                     options += String.Format("NOT NULL DEFAULT '{0}'", def);
 
@@ -135,12 +154,16 @@ namespace Plasma {
             }
 
             if (fPrimaryKey != null)
-                cmd += String.Format("  PRIMARY KEY (`{0}`)\n", fPrimaryKey);
+                cmd += String.Format("  PRIMARY KEY (`{0}`)", fPrimaryKey);
+
+
+            foreach (string key in fKeys)
+                cmd += String.Format(",\n  KEY `{0}` (`{0}`)", key);
 
             // TODO: Storage Engines are pretty important in MySQL
             //       The Nodes and NodeRefs tables should *probably* be InnoDB (fast node saves/adds)
             //       Accounts and Players should probably be MyISAM because they're inserted into rarely
-            cmd += ") DEFAULT CHARSET=utf8 ;";
+            cmd += "\n) DEFAULT CHARSET=utf8 ;";
             return cmd;
         }
     }

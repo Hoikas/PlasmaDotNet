@@ -127,6 +127,16 @@ namespace Plasma {
             }
         }
 
+        public Guid CreateAgeUuid {
+            get { return fCreateAgeUuid; }
+            set {
+                if (fCreateAgeUuid == Guid.Empty)
+                    fCreateAgeUuid = value;
+                else
+                    throw new NotSupportedException("Cannot change the CreateAgeUuid");
+            }
+        }
+
         public DateTime CreateTime {
             get { return fCreateTime; }
         }
@@ -421,8 +431,8 @@ namespace Plasma {
 
         public Dictionary<string, object> ToDictionary() {
             Dictionary<string, object> dict = new Dictionary<string, object>();
-            dict.Add("CreateTime", ToUnixTime(fCreateTime));
-            dict.Add("ModifyTime", ToUnixTime(fModifyTime));
+            dict.Add("CreateTime", fCreateTime.ToString("yyyy-MM-dd HH:mm:ss"));
+            dict.Add("ModifyTime", fModifyTime.ToString("yyyy-MM-dd HH:mm:ss"));
 
             if (fIdx.HasValue) 
                 dict.Add("Idx", (uint)fIdx);
@@ -499,6 +509,27 @@ namespace Plasma {
             DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             dt = dt.AddSeconds(Convert.ToDouble(unix));
             return dt;
+        }
+    }
+
+    public class pnVaultNodeRef {
+
+        public uint fParent;
+        public uint fChild;
+        public uint fSaver;
+
+        public void Read(hsStream s) {
+            fParent = s.ReadUInt();
+            fChild = s.ReadUInt();
+            fSaver = s.ReadUInt();
+            s.ReadByte(); // "Seen" -- might as well be garbage
+        }
+
+        public void Write(hsStream s) {
+            s.WriteUInt(fParent);
+            s.WriteUInt(fChild);
+            s.WriteUInt(fSaver);
+            s.WriteByte(0);
         }
     }
 }
