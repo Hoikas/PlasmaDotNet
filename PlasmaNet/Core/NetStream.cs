@@ -80,7 +80,19 @@ namespace Plasma {
     /// Cyan's MOUL Network coder "eap" is the sole reason this exists--he writes strings in too many different
     /// ways to the network!
     /// </remarks>
-    public static class pnHelpers {
+    public static partial class pnHelpers {
+
+        /// <summary>
+        /// Converts a hex string to a byte array.
+        /// </summary>
+        /// <param name="hex"></param>
+        /// <returns></returns>
+        public static byte[] GetBytes(string hex) {
+            byte[] buf = new byte[hex.Length / 2];
+            for (int i = 0; i < hex.Length; i += 2)
+                buf[i / 2] = Convert.ToByte(hex.Substring(i, 2), 16);
+            return buf;
+        }
 
         /// <summary>
         /// Converts an array of Bytes to a hex String

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -9,25 +10,11 @@ using OpenSSL;
 namespace Plasma {
     sealed class Program {
 
-        #region Reflection Helpers
-        static string ARevision {
-            get {
-                Version v = Assembly.GetExecutingAssembly().GetName().Version;
-                return v.Revision.ToString();
-            }
-        }
-
-        static string AVersion {
-            get {
-                Version v = Assembly.GetExecutingAssembly().GetName().Version;
-                return String.Format("{0}.{1}.{2}", v.Major, v.Minor, v.Build);
-            }
-        }
-        #endregion
-
         static void Main(string[] args) {
-            Console.WriteLine("Plasma .NET Servers v" + AVersion);
-            Console.WriteLine("Revision " + ARevision);
+            Console.WriteLine("Plasma .NET Servers Copyright (C) 2011  Adam Johnson");
+            Console.WriteLine("This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.");
+            Console.WriteLine("This is free software, and you are welcome to redistribute it");
+            Console.WriteLine("under certain conditions; type `show c' for details.");
             Console.WriteLine();
             Console.WriteLine();
 
@@ -42,6 +29,94 @@ namespace Plasma {
                 IRunDaemon(args);
         }
 
+        #region Interactive Console
+        static void IInteractiveMode() {
+            // Try not to crash it... Otherwise you're screwed.
+            bool keepGoing = true;
+            while (keepGoing) {
+                Console.Write("$ ");
+                keepGoing = IExecuteLine(Console.ReadLine());
+            }
+        }
+
+        static bool IExecuteLine(string line) {
+            string lower = line.ToLower();
+            
+            if (lower.StartsWith("acctadd")) {
+                IAddAccount(line.Substring(7).Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries));
+            } else if (lower == "exit" || lower == "quit")
+                return false;
+            else if (lower.StartsWith("show c")) {
+                Console.WriteLine("This program is free software: you can redistribute it and/or modify");
+                Console.WriteLine("it under the terms of the GNU Affero General Public License as published by");
+                Console.WriteLine("the Free Software Foundation, either version 3 of the License, or");
+                Console.WriteLine("(at your option) any later version.");
+            } else if (lower.StartsWith("show w")) {
+                Console.WriteLine("This program is distributed in the hope that it will be useful,");
+                Console.WriteLine("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+                Console.WriteLine("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+                Console.WriteLine("GNU Affero General Public License for more details.");
+            }
+
+            return true;
+        }
+
+        static void IAddAccount(string[] args) {
+            if (args.Length < 2) {
+                Console.WriteLine("Usage: addacct <username> <password> [permissions]");
+                Console.Write("Valid Permissions:");
+
+                string[] perms = Enum.GetNames(typeof(pnAuthSession.Permissions));
+                foreach (string perm in perms)
+                    Console.Write(" " + perm);
+                Console.WriteLine();
+                return;
+            }
+
+            // Get our permissions
+            int oPerm = (int)pnAuthSession.Permissions.Explorer;
+            Guid oGuid = Guid.NewGuid();
+            if (args.Length > 2) {
+                try {
+                    oPerm = (int)Enum.Parse(typeof(pnAuthSession.Permissions), args[2], true);
+                } catch (ArgumentException) {
+                    Console.WriteLine(String.Format("Error: Undefined permission level '{0}'", args[2]));
+                    return;
+                }
+            }
+
+            try {
+                IDbConnection db = pnDatabase.Connect();
+
+                // Check to see if this account already exists
+                pnSqlSelectStatement check = new pnSqlSelectStatement();
+                check.AddColumn("Guid");
+                check.AddWhere("Username", args[0]);
+                check.Limit = 1;
+                check.Table = "Accounts";
+                IDataReader r = check.Execute(db);
+                if (r.Read()) {
+                    Console.WriteLine(String.Format("Account already exists! [GUID: {0}]", r[0]));
+                    r.Close();
+                    return;
+                } else r.Close();
+
+                // Alright, we can add us an account
+                pnSqlInsertStatement create = new pnSqlInsertStatement();
+                create.AddValue("Username", args[0]);
+                create.AddValue("Password", pnHelpers.GetString(pnHelpers.HashLogin(args[0], args[1])));
+                create.AddValue("Permissions", oPerm);
+                create.AddValue("Guid", oGuid);
+                create.Table = "Accounts";
+                create.Execute(db);
+            } catch (pnDbException e) {
+                Console.WriteLine("---Database Error---");
+                Console.WriteLine(e.ToString());
+            }
+        }
+        #endregion
+
+        #region KeyGen
         static void IGenerateKeys() {
             // Hopefully people don't decide to change G like Cyan did...
             // Because that's really not how security works...
@@ -71,6 +146,7 @@ namespace Plasma {
             Console.WriteLine(String.Format("Server.{0}.X \"{1}\"", name, x));
             Console.WriteLine();
         }
+        #endregion
 
         static bool ILoadConfig() {
             // Load the configuration
@@ -156,7 +232,7 @@ namespace Plasma {
             pnLobby lobby = new pnLobby(auth, file, game, gate, lookup, vault);
             try {
                 lobby.Listen();
-                while (true) { } // TODO: Reimplement the console. Fake busy loop until then.
+                IInteractiveMode();
             } catch (pnBindException e) {
                 Console.WriteLine("Error: " + e.Message);
                 Console.WriteLine("Reason: " + e.InnerException.Message);

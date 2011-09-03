@@ -7,7 +7,7 @@ using System.Text;
 namespace Plasma {
     public partial class pnAuthSession {
 
-        enum Permissions {
+        internal enum Permissions {
             Banned    = -1,
             Explorer  =  0,
             Privledged, // Will allow player to login when logins are restricted
@@ -78,7 +78,16 @@ namespace Plasma {
 
                 uint? acctID = new uint?();
                 if (r.Read()) {
-                    if (r["Password"].ToString() == pnHelpers.GetString(req.fHash)) {
+                    // eap has made this password thing difficult for us...
+                    // Usernames that are email addresses do some strange SHA-0 stuff,
+                    // but normal usernames are just a SHA-1 hash. Lawd help us.
+                    byte[] gPass = pnHelpers.GetBytes(r["Password"].ToString());
+                    if (req.fAccount.Contains('@'))
+                        gPass = pnHelpers.HashLogin(gPass, req.fChallenge, fChallenge);
+
+                    // ... Nice, Microsoft. Neither the == operator nor the Equals method
+                    // actually tests the values >.<
+                    if (gPass.SequenceEqual(req.fHash)) {
                         acctID = (uint)r["Idx"];
                         reply.fAcctGuid = new Guid(r["Guid"].ToString());
                         reply.fBillingType = 1; // HACK -- Always create explorers
