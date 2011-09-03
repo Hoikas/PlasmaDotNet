@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
 namespace Plasma {
-    public class pnGateClient : plNetClient {
+    public class pnGateClient : pnUnbufferedClient {
 
-        public pnGateClient() {
+        public pnGateClient() : base() {
             fConnHdr.fType = ENetProtocol.kConnTypeCliToGate;
         }
 
@@ -26,7 +27,6 @@ namespace Plasma {
 
             // Listen
             base.IOnConnect();
-            fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
         }
 
         public void Ping(uint ms, byte[] payload, pnCallback cb) {
@@ -42,20 +42,25 @@ namespace Plasma {
             }
         }
 
-        private void IReceive(IAsyncResult ar) {
-            fSocket.EndReceive(ar);
-
-            lock (fStream) {
-                pnGate2Cli msgID = (pnGate2Cli)fStream.ReadUShort();
-                switch (msgID) {
-                    case pnGate2Cli.kGateKeeper2Cli_PingReply:
-                        IPingReply();
-                        break;
+        protected override void OnReceive() {
+            try {
+                lock (fStream) {
+                    pnGate2Cli msgID = (pnGate2Cli)fStream.ReadUShort();
+                    switch (msgID) {
+                        case pnGate2Cli.kGateKeeper2Cli_PingReply:
+                            IPingReply();
+                            break;
+                    }
                 }
+            } catch (EndOfStreamException) {
+                // Disconnected in a strange way
+                return;
+            } catch (SocketException) {
+                // Connection Reset OR something weird happened
+                return;
+            } catch (ObjectDisposedException) {
+                // The socket was closed.
             }
-
-            // Listen
-            fSocket.BeginReceive(new byte[0], 0, 0, SocketFlags.Peek, new AsyncCallback(IReceive), null);
         }
 
         private void IPingReply() {

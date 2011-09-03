@@ -15,7 +15,7 @@ namespace Plasma {
 
         public abstract void End();
 
-        protected bool IInitialize(string srv) {
+        protected virtual bool IInitialize(string srv) {
             byte[] priv, pub;
             try {
                 priv = Convert.FromBase64String(pngIni.Ini[String.Format("Server.{0}.K", srv)]);
@@ -30,11 +30,8 @@ namespace Plasma {
                 return false;
             }
 
-            fSocket.BeginReceive(new byte[0], 0, 0, SocketFlags.Peek, new AsyncCallback(IReadMsg), null);
             return true;
         }
-
-        protected abstract void IReadMsg(IAsyncResult ar);
 
         protected void Debug(string msg) {
             string log = String.Format("[{0}] {1}", fSocket.RemoteEndPoint.ToString(), msg);
@@ -60,5 +57,34 @@ namespace Plasma {
             string log = String.Format("[{0}] {1}", fSocket.RemoteEndPoint.ToString(), msg);
             fLog.Warn(log);
         }
+    }
+
+    public abstract class pnUnbufferedSession : pnSession {
+
+        SocketAsyncEventArgs fReceiveArgs = new SocketAsyncEventArgs();
+
+        public pnUnbufferedSession(Socket s, pnCli2Srv_Connect hdr)
+            : base(s, hdr) {
+            fReceiveArgs.Completed +=new EventHandler<SocketAsyncEventArgs>(IReceive);
+            fReceiveArgs.SetBuffer(new byte[0], 0, 0);
+        }
+
+        protected override bool IInitialize(string srv) {
+            if (base.IInitialize(srv)) {
+                IReceive();
+                return true;
+            } else return false;
+        }
+
+        protected void IReceive() {
+            if (!fSocket.ReceiveAsync(fReceiveArgs))
+                ReadMsg();
+        }
+
+        private void IReceive(object sender, SocketAsyncEventArgs args) {
+            ReadMsg();
+        }
+
+        protected abstract void ReadMsg();
     }
 }

@@ -9,7 +9,7 @@ using System.Text;
 using OpenSSL;
 
 namespace Plasma {
-    public partial class pnAuthSession : pnSession {
+    public partial class pnAuthSession : pnUnbufferedSession {
 
         pnAuthServer fParent;
         pnVaultClient fVaultCli = new pnVaultClient();
@@ -72,11 +72,9 @@ namespace Plasma {
             Close();
         }
 
-        protected override void IReadMsg(IAsyncResult ar) {
+        protected override void ReadMsg() {
             // Wrap this in so many try... catch blocks your head will spin.
             try {
-                fSocket.EndReceive(ar);
-
                 lock (fStream) {
                     pnCli2Auth msgID = (pnCli2Auth)fStream.ReadUShort();
 
@@ -103,7 +101,7 @@ namespace Plasma {
                     }
                 }
 
-                fSocket.BeginReceive(new byte[0], 0, 0, SocketFlags.Peek, new AsyncCallback(IReadMsg), null);
+                IReceive();
             } catch (EndOfStreamException) {
                 // Remote client disconnected in a strange way
                 End();
@@ -114,10 +112,8 @@ namespace Plasma {
                     Error(e);
                 End();
                 return;
-            } catch (ObjectDisposedException e) {
-                // The client was kicked, but the socket is still alive, so just ignore.
-                if (e.ObjectName != typeof(Socket).ToString())
-                    throw e;
+            } catch (ObjectDisposedException) {
+                // The socket was closed.
             }
         }
 

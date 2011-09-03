@@ -8,7 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 
 namespace Plasma {
-    public partial class pnVaultSession : pnSession {
+    public partial class pnVaultSession : pnUnbufferedSession {
 
         pnVaultServer fParent;
         IDbConnection fDb;
@@ -41,11 +41,9 @@ namespace Plasma {
             return IInitialize("Vault");
         }
 
-        protected override void IReadMsg(IAsyncResult ar) {
+        protected override void ReadMsg() {
             // Wrap this in so many try... catch blocks your head will spin.
             try {
-                fSocket.EndReceive(ar);
-
                 lock (fStream) {
                     pnCli2Vault msgID = (pnCli2Vault)fStream.ReadUShort();
 
@@ -63,7 +61,7 @@ namespace Plasma {
                     }
                 }
 
-                fSocket.BeginReceive(new byte[0], 0, 0, SocketFlags.Peek, new AsyncCallback(IReadMsg), null);
+                IReceive();
             } catch (EndOfStreamException) {
                 // Remote client disconnected in a strange way
                 End();
@@ -74,10 +72,8 @@ namespace Plasma {
                     Error(e);
                 End();
                 return;
-            } catch (ObjectDisposedException e) {
-                // The client was kicked, but the socket is still alive, so just ignore.
-                if (e.ObjectName != typeof(Socket).ToString())
-                    throw e;
+            } catch (ObjectDisposedException) {
+                // The socket was closed.
             }
         }
 

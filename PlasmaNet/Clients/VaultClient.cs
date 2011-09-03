@@ -7,9 +7,8 @@ using System.Net.Sockets;
 using System.Text;
 
 namespace Plasma {
-    public class pnVaultClient : plNetClient {
-
-        public pnVaultClient() {
+    public class pnVaultClient : pnUnbufferedClient {
+        public pnVaultClient() : base() {
             fConnHdr.fType = ENetProtocol.kConnTypeSrvToVault;
         }
 
@@ -26,7 +25,6 @@ namespace Plasma {
 
             // Listen
             base.IOnConnect();
-            fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
         }
 
         public void CreatePlayer(Guid acct, string name, string shape, pnCallback cb) {
@@ -56,11 +54,9 @@ namespace Plasma {
             }
         }
 
-        private void IReceive(IAsyncResult ar) {
+        protected override void OnReceive() {
             try {
                 lock (fStream) {
-                    fSocket.EndReceive(ar);
-
                     pnVault2Cli msgID = (pnVault2Cli)fStream.ReadUShort();
                     switch (msgID) {
                         case pnVault2Cli.kVault2Cli_PingReply:
@@ -71,8 +67,7 @@ namespace Plasma {
                             break;
                     }
 
-                    // Listen
-                    fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), null);
+                    IReceive();
                 }
             } catch (EndOfStreamException) {
                 // Disconnected in a strange way
@@ -80,10 +75,8 @@ namespace Plasma {
             } catch (SocketException) {
                 // Connection Reset OR something weird happened
                 return;
-            } catch (ObjectDisposedException e) {
-                // The client was kicked, but the socket is still alive, so just ignore.
-                if (e.ObjectName != typeof(Socket).ToString())
-                    throw e;
+            } catch (ObjectDisposedException) {
+                // The socket was closed.
             }
         }
 

@@ -225,4 +225,36 @@ namespace Plasma {
         public pnCallback(Delegate cb) { fFunction = cb; }
         public pnCallback(Delegate cb, object param) { fFunction = cb; fParam = param; }
     }
+
+    /// <summary>
+    /// Base client that performs synchronous reads.
+    /// </summary>
+    /// <remarks>
+    /// This is compatible with the Cyan-Style Auth, Game, and Gate
+    /// </remarks>
+    public abstract class pnUnbufferedClient : plNetClient {
+
+        SocketAsyncEventArgs fReceiveArgs = new SocketAsyncEventArgs();
+
+        public pnUnbufferedClient() {
+            fReceiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IReceive);
+            fReceiveArgs.SetBuffer(new byte[0], 0, 0); // We just want to be notified when we can read.
+        }
+
+        protected override void IOnConnect() {
+            base.IOnConnect();
+            IReceive();
+        }
+
+        protected void IReceive() {
+            if (!fSocket.ReceiveAsync(fReceiveArgs))
+                OnReceive();
+        }
+
+        private void IReceive(object sender, SocketAsyncEventArgs args) {
+            OnReceive();
+        }
+
+        protected abstract void OnReceive();
+    }
 }
