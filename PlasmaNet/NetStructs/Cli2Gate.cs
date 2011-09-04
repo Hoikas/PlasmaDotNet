@@ -15,7 +15,7 @@ namespace Plasma {
         public uint fPingTimeMs;
         public byte[] fPayload;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Gate.kCli2GateKeeper_PingRequest; }
         }
 

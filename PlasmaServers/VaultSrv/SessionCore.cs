@@ -8,7 +8,7 @@ using System.Net.Sockets;
 using System.Text;
 
 namespace Plasma {
-    public partial class pnVaultSession : pnUnbufferedSession {
+    public partial class pnVaultSession : pnSynchSession {
 
         pnVaultServer fParent;
         IDbConnection fDb;

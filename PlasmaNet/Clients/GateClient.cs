@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 
 namespace Plasma {
-    public class pnGateClient : pnUnbufferedClient {
+    public class pnGateClient : pnSynchClient {
 
         public pnGateClient() : base() {
             fConnHdr.fType = ENetProtocol.kConnTypeCliToGate;

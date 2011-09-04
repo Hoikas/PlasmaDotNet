@@ -8,7 +8,7 @@ using System.Text;
 using OpenSSL;
 
 namespace Plasma {
-    public class pnRC4SocketStream : Stream {
+    public class pnSocketStream : Stream {
 
         #region Properties
         public override bool CanRead {
@@ -38,11 +38,16 @@ namespace Plasma {
         RC4 fRead;
         RC4 fWrite;
         Socket fSocket;
+        SocketAsyncEventArgs fSendArgs = new SocketAsyncEventArgs();
 
-        public pnRC4SocketStream(Socket socket, byte[] key) {
-            fRead = new RC4(key);
-            fWrite = new RC4(key);
+        public pnSocketStream(Socket socket, byte[] key) {
             fSocket = socket;
+            if (key != null) {
+                fRead = new RC4(key);
+                fWrite = new RC4(key);
+            }
+
+            fSendArgs.Completed +=new EventHandler<SocketAsyncEventArgs>(IBufferSent);
         }
 
         public override int Read(byte[] buffer, int offset, int count) {
@@ -52,8 +57,11 @@ namespace Plasma {
                 throw new EndOfStreamException("Socket read returned less data than requested");
             
             // Decrypt and do some finalization
-            byte[] temp = fRead.Transform(recv);
-            Buffer.BlockCopy(temp, 0, buffer, offset, count);
+            if (fRead != null) {
+                byte[] temp = fRead.Transform(recv);
+                Buffer.BlockCopy(temp, 0, buffer, offset, count);
+            } else
+                Buffer.BlockCopy(recv, 0, buffer, offset, count);
             return count;
         }
 
@@ -66,10 +74,73 @@ namespace Plasma {
         }
 
         public override void Write(byte[] buffer, int offset, int count) {
-            byte[] temp = new byte[count];
-            Buffer.BlockCopy(buffer, offset, temp, 0, count);
-            byte[] toSend = fWrite.Transform(temp);
-            fSocket.Send(toSend);
+            if (fWrite != null) {
+                byte[] temp = new byte[count];
+                Buffer.BlockCopy(buffer, offset, temp, 0, count);
+                byte[] toSend = fWrite.Transform(temp);
+                fSendArgs.SetBuffer(toSend, 0, toSend.Length);
+            } else
+                fSendArgs.SetBuffer(buffer, offset, count);
+            
+            if (!fSocket.SendAsync(fSendArgs))
+                fSendArgs.SetBuffer(null, 0, 0);
+        }
+
+        private void IBufferSent(object sender, SocketAsyncEventArgs e) {
+            // Throw the buffer away and let it be collected
+            fSendArgs.SetBuffer(null, 0, 0);
+        }
+    }
+
+    /// <summary>
+    /// Plasma Stream that requires the user to manually flush the output buffer
+    /// </summary>
+    /// <remarks>
+    /// This is most useful in network situations because MOUL expects the entire message buffer to be on the wire
+    /// when it reads it in. EAP was silly and used memcpy, strdup, and all kinds of silly devilry.
+    /// </remarks>
+    public class plBufferedStream : hsStream {
+
+        protected MemoryStream fWriteStream;
+        private bool fPrependLength = false;
+
+        /// <summary>
+        /// Gets or sets if we should prepend an Int32 length to the flushed stream.
+        /// </summary>
+        public bool PrependLength {
+            get { return fPrependLength; }
+            set { fPrependLength = value; }
+        }
+
+        public plBufferedStream(Stream baseStream) {
+            fBaseStream = baseStream;
+            fWriteStream = new MemoryStream();
+
+            if (baseStream.CanRead)
+                fReader = new BinaryReader(baseStream);
+            fWriter = new BinaryWriter(fWriteStream);
+        }
+
+        public new void Close() {
+            Flush();
+            fWriteStream.Close();
+            base.Close();
+        }
+
+        public void Flush() {
+            if (fWriteStream.Length == 0) return;
+
+            byte[] buf = fWriteStream.ToArray();
+            if (fPrependLength) {
+                byte[] temp = new byte[buf.Length + 4];
+
+                // Copy the total length, then the actual buffer
+                Buffer.BlockCopy(BitConverter.GetBytes(temp.Length), 0, temp, 0, 4);
+                Buffer.BlockCopy(buf, 0, temp, 4, buf.Length);
+                fBaseStream.Write(temp, 0, temp.Length);
+            }
+                fBaseStream.Write(buf, 0, buf.Length);
+            fWriteStream.SetLength(0);
         }
     }
 

@@ -88,7 +88,7 @@ namespace Plasma {
         public uint fBillingType;
         public uint[] fDroidKey;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnAuth2Cli.kAuth2Cli_AcctLoginReply; }
         }
 
@@ -122,7 +122,7 @@ namespace Plasma {
         public string fModel;      // Len 64
         public uint fExplorer;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnAuth2Cli.kAuth2Cli_AcctPlayerInfo; }
         }
 
@@ -146,7 +146,7 @@ namespace Plasma {
     public class pnAuth2Cli_ClientRegisterReply : plNetStruct {
         public uint fChallenge;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnAuth2Cli.kAuth2Cli_ClientRegisterReply; }
         }
 
@@ -162,7 +162,7 @@ namespace Plasma {
     public class pnAuth2Cli_KickedOff : plNetStruct {
         public ENetError fReason;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnAuth2Cli.kAuth2Cli_KickedOff; }
         }
 
@@ -180,7 +180,7 @@ namespace Plasma {
         public uint fPingTimeMs;
         public byte[] fPayload;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnAuth2Cli.kAuth2Cli_PingReply; }
         }
 
@@ -206,7 +206,7 @@ namespace Plasma {
         public string fPlayerName; // Len 40
         public string fShape;      // Len 64
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnAuth2Cli.kAuth2Cli_PlayerCreateReply; }
         }
 
@@ -235,7 +235,7 @@ namespace Plasma {
         public ENetError fResult;
         public pnVaultNodeRef[] fNodeRefs;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultNodeRefsFetched; }
         }
 

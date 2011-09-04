@@ -91,7 +91,7 @@ namespace Plasma {
         public string fAuthToken; // Len 64
         public string fOS;        // Len 08
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Auth.kCli2Auth_AcctLoginRequest; }
         }
 
@@ -142,7 +142,7 @@ namespace Plasma {
         public uint fTransID;
         public uint fPlayerID;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Auth.kCli2Auth_AcctSetPlayerRequest; }
         }
 
@@ -160,7 +160,7 @@ namespace Plasma {
     public class pnCli2Auth_ClientRegisterRequest : plNetStruct {
         public uint fBuildID;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Auth.kCli2Auth_ClientRegisterRequest; }
         }
 
@@ -178,7 +178,7 @@ namespace Plasma {
         public uint   fPingTimeMs;
         public byte[] fPayload;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Auth.kCli2Auth_PingRequest; }
         }
 
@@ -206,7 +206,7 @@ namespace Plasma {
         public string fShape;      // Len 260
         public string fInvite;     // Len 260
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Auth.kCli2Auth_PlayerCreateRequest; }
         }
 
@@ -230,7 +230,7 @@ namespace Plasma {
         public uint fTransID;
         public uint fNodeID;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Auth.kCli2Auth_VaultFetchNodeRefs; }
         }
 

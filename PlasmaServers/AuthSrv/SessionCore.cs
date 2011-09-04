@@ -9,7 +9,7 @@ using System.Text;
 using OpenSSL;
 
 namespace Plasma {
-    public partial class pnAuthSession : pnUnbufferedSession {
+    public partial class pnAuthSession : pnSynchSession {
 
         pnAuthServer fParent;
         pnVaultClient fVaultCli = new pnVaultClient();

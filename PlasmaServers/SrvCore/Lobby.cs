@@ -112,6 +112,7 @@ namespace Plasma {
             }
 
             fSocket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            fSocket.NoDelay = true; // Match Cyan
 
             try {
                 fSocket.Bind(new IPEndPoint(ip, 14617));

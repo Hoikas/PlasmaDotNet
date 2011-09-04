@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clients\FileClient.cs" />
     <Compile Include="Clients\GateClient.cs" />
     <Compile Include="Clients\VaultClient.cs" />
     <Compile Include="Core\Enums.cs" />
@@ -67,8 +68,10 @@
     <Compile Include="Helpers\IniParser.cs" />
     <Compile Include="NetStructs\Auth2Cli.cs" />
     <Compile Include="NetStructs\Cli2Auth.cs" />
+    <Compile Include="NetStructs\Cli2File.cs" />
     <Compile Include="NetStructs\Cli2Gate.cs" />
     <Compile Include="NetStructs\Cli2Vault.cs" />
+    <Compile Include="NetStructs\File2Cli.cs" />
     <Compile Include="NetStructs\Gate2Cli.cs" />
     <Compile Include="NetStructs\NsBase.cs" />
     <Compile Include="NetStructs\Vault2Cli.cs" />

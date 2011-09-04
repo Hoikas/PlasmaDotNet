@@ -94,6 +94,7 @@ namespace Plasma {
 
         private void IOnConnect(IAsyncResult ar) {
             fSocket.EndConnect(ar);
+            fSocket.NoDelay = true; // Match Cyan.
             IOnConnect();
         }
 
@@ -105,7 +106,7 @@ namespace Plasma {
         /// Blocks the current thread until a connection has been established.
         /// </summary>
         public void WaitForConnection() {
-            fWaitOnConnect.Reset();
+            fWaitOnConnect.WaitOne();
         }
 
         public void Close() {
@@ -158,7 +159,7 @@ namespace Plasma {
                 else key[i] = (byte)(cli[i] ^ srv[i]);
             }
 
-            fStream = new plBufferedStream(new pnRC4SocketStream(fSocket, key));
+            fStream = new plBufferedStream(new pnSocketStream(fSocket, key));
         }
 
         private byte[] ISetupKeys(plBufferedStream s, int gval) {
@@ -232,11 +233,11 @@ namespace Plasma {
     /// <remarks>
     /// This is compatible with the Cyan-Style Auth, Game, and Gate
     /// </remarks>
-    public abstract class pnUnbufferedClient : plNetClient {
+    public abstract class pnSynchClient : plNetClient {
 
         SocketAsyncEventArgs fReceiveArgs = new SocketAsyncEventArgs();
 
-        public pnUnbufferedClient() {
+        public pnSynchClient() {
             fReceiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IReceive);
             fReceiveArgs.SetBuffer(new byte[0], 0, 0); // We just want to be notified when we can read.
         }
@@ -257,4 +258,7 @@ namespace Plasma {
 
         protected abstract void OnReceive();
     }
+
+    // TODO: pnAsynchClient? [For pnFileClient]
+    // Would use ReceiveAsync rather than synchronous reads.
 }

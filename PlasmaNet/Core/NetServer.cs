@@ -40,7 +40,7 @@ namespace Plasma {
                     else key[i] = (byte)(seed_data[i] ^ server_seed[i]);
 
                 // Final setup
-                fStream = new plBufferedStream(new pnRC4SocketStream(fSocket, key));
+                fStream = new plBufferedStream(new pnSocketStream(fSocket, key));
                 IWriteNetCliEncrypt(temp, server_seed);
 
                 // Explicitly clean up some resources so that we don't pressure the GC too much.

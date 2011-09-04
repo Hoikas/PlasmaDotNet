@@ -59,11 +59,11 @@ namespace Plasma {
         }
     }
 
-    public abstract class pnUnbufferedSession : pnSession {
+    public abstract class pnSynchSession : pnSession {
 
         SocketAsyncEventArgs fReceiveArgs = new SocketAsyncEventArgs();
 
-        public pnUnbufferedSession(Socket s, pnCli2Srv_Connect hdr)
+        public pnSynchSession(Socket s, pnCli2Srv_Connect hdr)
             : base(s, hdr) {
             fReceiveArgs.Completed +=new EventHandler<SocketAsyncEventArgs>(IReceive);
             fReceiveArgs.SetBuffer(new byte[0], 0, 0);
@@ -87,4 +87,7 @@ namespace Plasma {
 
         protected abstract void ReadMsg();
     }
+
+    // TODO: pnBufferedSession? [For FileSrv]
+    // Would use ReceiveAsync rather than synchronous reads.
 }

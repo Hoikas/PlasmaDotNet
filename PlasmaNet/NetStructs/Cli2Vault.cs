@@ -25,7 +25,7 @@ namespace Plasma {
         public uint fPingTimeMs;
         public byte[] fPayload;
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Vault.kCli2Vault_PingRequest; }
         }
 
@@ -53,7 +53,7 @@ namespace Plasma {
         public string fPlayerName; // Len  40
         public string fShape;      // Len  64
 
-        protected override ushort MsgID {
+        protected override object MsgID {
             get { return (ushort)pnCli2Vault.kCli2Vault_PlayerCreateRequest; }
         }
 

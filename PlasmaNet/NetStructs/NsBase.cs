@@ -52,7 +52,7 @@ namespace Plasma {
         }
 
         // Implementation details...
-        protected abstract ushort MsgID { get; }
+        protected abstract object MsgID { get; }
         public abstract void Read(hsStream s);
         public abstract void Write(hsStream s);
 
@@ -61,7 +61,12 @@ namespace Plasma {
         /// </summary>
         /// <param name="s">Stream to write to</param>
         public void Send(plBufferedStream s) {
-            s.WriteUShort(MsgID);
+            if (MsgID is UInt32)
+                s.WriteUInt((uint)MsgID);
+            else if (MsgID is UInt16)
+                s.WriteUShort((ushort)MsgID);
+            else 
+                throw new NotSupportedException();
             Write(s);
             s.Flush();
         }

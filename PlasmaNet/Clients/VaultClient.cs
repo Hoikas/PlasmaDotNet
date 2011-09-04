@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 
 namespace Plasma {
-    public class pnVaultClient : pnUnbufferedClient {
+    public class pnVaultClient : pnSynchClient {
         public pnVaultClient() : base() {
             fConnHdr.fType = ENetProtocol.kConnTypeSrvToVault;
         }

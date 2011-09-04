@@ -223,39 +223,4 @@ namespace Plasma {
             fWriter.Write(data);
         }
     }
-
-    /// <summary>
-    /// Plasma Stream that requires the user to manually flush the output buffer
-    /// </summary>
-    /// <remarks>
-    /// This is most useful in network situations because MOUL expects the entire message buffer to be on the wire
-    /// when it reads it in. EAP was silly and used memcpy, strdup, and all kinds of silyl devilry.
-    /// </remarks>
-    public class plBufferedStream : hsStream {
-
-        protected MemoryStream fWriteStream;
-
-        public plBufferedStream(Stream baseStream) {
-            fBaseStream = baseStream;
-            fWriteStream = new MemoryStream();
-
-            if (baseStream.CanRead)
-                fReader = new BinaryReader(baseStream);
-            fWriter = new BinaryWriter(fWriteStream);
-        }
-
-        public new void Close() {
-            Flush();
-            fWriteStream.Close();
-            base.Close();
-        }
-
-        public void Flush() {
-            if (fWriteStream.Length == 0) return;
-
-            byte[] buf = fWriteStream.ToArray();
-            fBaseStream.Write(buf, 0, buf.Length);
-            fWriteStream.SetLength(0);
-        }
-    }
 }
