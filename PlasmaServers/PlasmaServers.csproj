@@ -59,6 +59,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SrvCore\Session.cs" />
+    <Compile Include="VaultCli\Cli2Vault.cs" />
+    <Compile Include="VaultSrv\Vault2Cli.cs" />
+    <Compile Include="VaultCli\VaultClient.cs" />
     <Compile Include="VaultSrv\Server.cs" />
     <Compile Include="VaultSrv\SessionCore.cs" />
     <Compile Include="VaultSrv\SessionNodes.cs" />
