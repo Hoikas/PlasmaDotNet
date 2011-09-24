@@ -7,6 +7,87 @@ using System.Text;
 namespace Plasma {
     public partial class pnVaultSession {
 
+        // The vault server enforces basic security for session that come from the auth server
+        // Note that this security is BASIC and can be completely destroyed by giving out the
+        // vault keys! We do not enforce logins (unlike the auth server) because other servers will
+        // connect to us, so we need to let them do anything. In short: DON'T GIVE OUT THE VAULT KEYS.
+        uint fPlayerID = 0;
+
+        private void IAcctLogin() {
+            pnCli2Vault_AcctLoginRequest req = new pnCli2Vault_AcctLoginRequest();
+            req.Read(fStream);
+
+            pnVault2Cli_AcctLoginReply reply = new pnVault2Cli_AcctLoginReply();
+            reply.fTransID = req.fTransID;
+            reply.fResult = ENetError.kNetSuccess;
+
+            try {
+                pnSqlSelectStatement acct = new pnSqlSelectStatement();
+                acct.AddColumn("Idx");
+                acct.AddColumn("Password");
+                acct.AddColumn("Permissions");
+                acct.AddColumn("Guid");
+                acct.AddWhere("Username", req.fAccount);
+                acct.Limit = 1;
+                acct.Table = "Accounts";
+                IDataReader r = acct.Execute(fDb);
+
+                uint? acctID = new uint?();
+                if (r.Read()) {
+                    // eap has made this password thing difficult for us...
+                    // Usernames that are email addresses do some strange SHA-0 stuff,
+                    // but normal usernames are just a SHA-1 hash. Lawd help us.
+                    byte[] gPass = pnHelpers.GetBytes(r["Password"].ToString());
+                    if (req.fAccount.Contains('@'))
+                        gPass = pnHelpers.HashLogin(gPass, req.fCliChg, req.fSrvChg);
+
+                    // ... Nice, Microsoft. Neither the == operator nor the Equals method
+                    // actually tests the values >.<
+                    if (gPass.SequenceEqual(req.fHash)) {
+                        acctID = (uint)r["Idx"];
+                        reply.fAcctGuid = new Guid(r["Guid"].ToString());
+                        reply.fPermissions = (int)r["Permissions"];
+                        if (reply.fPermissions == (int)pnAcctPerms.Banned)
+                            reply.fResult = ENetError.kNetErrAccountBanned;
+                    } else
+                        reply.fResult = ENetError.kNetErrAuthenticationFailed;
+                } else
+                    // I realize there is an "Account Not Found" Error, but that's
+                    // kind of a security hole.
+                    reply.fResult = ENetError.kNetErrAuthenticationFailed;
+                r.Close();
+
+                // Now grab the avatars
+                if (acctID.HasValue) {
+                    pnSqlSelectStatement avatars = new pnSqlSelectStatement();
+                    avatars.AddColumn("Model");
+                    avatars.AddColumn("Name");
+                    avatars.AddColumn("PlayerIdx");
+                    avatars.AddWhere("AcctIdx", acctID.Value.ToString());
+                    avatars.Limit = 5;
+                    avatars.Table = "Players";
+                    r = avatars.Execute(fDb);
+
+                    List<pnVaultAvatarInfo> players = new List<pnVaultAvatarInfo>();
+                    while (r.Read()) {
+                        pnVaultAvatarInfo info = new pnVaultAvatarInfo();
+                        info.fModel = r["Model"].ToString();
+                        info.fPlayerID = (uint)r["PlayerIdx"];
+                        info.fPlayerName = r["Name"].ToString();
+                        players.Add(info);
+                    }
+
+                    reply.fAvatars = players.ToArray();
+                    r.Close();
+                }
+            } catch (pnDbException e) {
+                Error(e, "Database Error on Login");
+                reply.fResult = ENetError.kNetErrInternalError;
+            }
+
+            reply.Send(fStream);
+        }
+
         private void ICreatePlayer() {
             pnCli2Vault_PlayerCreateRequest req = new pnCli2Vault_PlayerCreateRequest();
             req.Read(fStream);
@@ -153,6 +234,53 @@ namespace Plasma {
             // Neighborhood, Ae'gura
 
             // Send the response :)
+            reply.Send(fStream);
+        }
+
+        private void ISetPlayer() {
+            pnCli2Vault_PlayerSetRequest req = new pnCli2Vault_PlayerSetRequest();
+            req.Read(fStream);
+
+            pnVault2Cli_PlayerSetReply reply = new pnVault2Cli_PlayerSetReply();
+            reply.fTransID = req.fTransID;
+
+            // Make sure that player is on this account
+            try {
+                pnSqlSelectStatement selAcctIdx = new pnSqlSelectStatement();
+                selAcctIdx.AddColumn("Idx");
+                selAcctIdx.AddColumn("Permissions");
+                selAcctIdx.AddWhere("Guid", req.fAcctGuid);
+                selAcctIdx.Table = "Accounts";
+
+                IDataReader rAcctIdx = selAcctIdx.Execute(fDb);
+                if (rAcctIdx.Read()) {
+                    uint acctIdx = Convert.ToUInt32(rAcctIdx["Idx"]);
+                    int perms = Convert.ToInt32(rAcctIdx["Permissions"]);
+                    rAcctIdx.Close();
+
+                    pnSqlSelectStatement selPlayer = new pnSqlSelectStatement();
+                    selPlayer.AddColumn("COUNT(*)");
+                    selPlayer.AddWhere("AcctIdx", acctIdx);
+                    selPlayer.Table = "Players"; ;
+
+                    IDataReader rPlayer = selPlayer.Execute(fDb);
+                    if (rPlayer.Read()) {
+                        reply.fResult = ENetError.kNetSuccess;
+
+                        // Cache the PlayerID for basic security if this is not a CCR/Admin
+                        if (perms < (int)pnAcctPerms.CCR)
+                            fPlayerID = req.fPlayerID;
+                    } else reply.fResult = ENetError.kNetErrPlayerNotFound;
+                    rPlayer.Close();
+                } else {
+                    reply.fResult = ENetError.kNetErrPlayerNotFound;
+                    rAcctIdx.Close();
+                }
+            } catch (pnDbException e) {
+                reply.fResult = ENetError.kNetErrInternalError;
+                Error(e, "SetActivePlayer Failed");
+            }
+
             reply.Send(fStream);
         }
     }

@@ -27,8 +27,9 @@ namespace Plasma {
         }
 
         public void Close() {
-            fSocket.Close();
             fStream.Close();
+            fSocket.Shutdown(SocketShutdown.Both);
+            fSocket.Close();
             End();
         }
 
@@ -94,9 +95,11 @@ namespace Plasma {
                         case pnCli2Auth.kCli2Auth_PlayerCreateRequest:
                             ICreatePlayer();
                             break;
+                        case pnCli2Auth.kCli2Auth_VaultFetchNodeRefs:
+                            IFetchNodeRefs();
+                            break;
                         default:
-                            // TODO: Kick Off properly
-                            Close();
+                            KickOff(ENetError.kNetErrDisconnected);
                             break;
                     }
                 }
@@ -115,6 +118,13 @@ namespace Plasma {
             } catch (ObjectDisposedException) {
                 // The socket was closed.
             }
+#if !DEBUG
+            catch (Exception e) {
+                // DO NOT CRASH
+                Error(e, "Unhandled exception in the receive function!");
+                KickOff(ENetError.kNetErrInternalError);
+            }
+#endif
         }
 
         private void IPingPong() {

@@ -38,7 +38,6 @@ namespace Plasma {
         RC4 fRead;
         RC4 fWrite;
         Socket fSocket;
-        SocketAsyncEventArgs fSendArgs = new SocketAsyncEventArgs();
 
         public pnSocketStream(Socket socket, byte[] key) {
             fSocket = socket;
@@ -46,8 +45,6 @@ namespace Plasma {
                 fRead = new RC4(key);
                 fWrite = new RC4(key);
             }
-
-            fSendArgs.Completed +=new EventHandler<SocketAsyncEventArgs>(IBufferSent);
         }
 
         public override int Read(byte[] buffer, int offset, int count) {
@@ -78,17 +75,9 @@ namespace Plasma {
                 byte[] temp = new byte[count];
                 Buffer.BlockCopy(buffer, offset, temp, 0, count);
                 byte[] toSend = fWrite.Transform(temp);
-                fSendArgs.SetBuffer(toSend, 0, toSend.Length);
+                fSocket.Send(toSend);
             } else
-                fSendArgs.SetBuffer(buffer, offset, count);
-            
-            if (!fSocket.SendAsync(fSendArgs))
-                fSendArgs.SetBuffer(null, 0, 0);
-        }
-
-        private void IBufferSent(object sender, SocketAsyncEventArgs e) {
-            // Throw the buffer away and let it be collected
-            fSendArgs.SetBuffer(null, 0, 0);
+                fSocket.Send(buffer, offset, count, SocketFlags.None);
         }
     }
 

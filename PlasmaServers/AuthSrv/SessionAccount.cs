@@ -5,19 +5,20 @@ using System.Linq;
 using System.Text;
 
 namespace Plasma {
+    public enum pnAcctPerms {
+        Banned = -1,
+        Explorer = 0,
+        Privledged, // Will allow player to login when logins are restricted
+        CCR,        // Player is exempt from anti-cheat detection
+        SuperAdmin, // Future...
+    }
+
     public partial class pnAuthSession {
 
-        internal enum Permissions {
-            Banned    = -1,
-            Explorer  =  0,
-            Privledged, // Will allow player to login when logins are restricted
-            CCR,        // Player is exempt from anti-cheat detection
-            SuperAdmin, // Future...
-        }
-
         Guid fAcctGuid;
+        uint fPlayerIdx;
         uint fChallenge;
-        Permissions fPermissions;
+        pnAcctPerms fPermissions;
 
         private void ICreatePlayer() {
             pnCli2Auth_PlayerCreateRequest req = new pnCli2Auth_PlayerCreateRequest();
@@ -29,7 +30,7 @@ namespace Plasma {
                 status = ENetError.kNetErrAuthenticationFailed;
 
             // Only CCR+ may create special avatars
-            if (fPermissions < Permissions.CCR) {
+            if (fPermissions < pnAcctPerms.CCR) {
                 if (req.fShape.ToLower() != "male" &&
                     req.fShape.ToLower() != "female")
                     status = ENetError.kNetErrPlayerNameInvalid; // Close enough?
@@ -53,93 +54,47 @@ namespace Plasma {
             pnCli2Auth_AcctLoginRequest req = new pnCli2Auth_AcctLoginRequest();
             req.Read(fStream);
 
-            // We absolutely must be connected to the vault server before this happens...
-            fVaultCli.WaitForConnection();
+            if (fAcctGuid == Guid.Empty) {
+                fVaultCli.WaitForConnection();
+                fVaultCli.AcctLogin(req.fAccount, req.fHash, req.fChallenge, fChallenge,
+                    new pnCallback(new pnVaultAcctLoggedIn(IOnAcctLoggedIn), req.fTransID));
+            } else {
+                // A special kind of stupid... time to get what you deserve.
+                KickOff(ENetError.kNetErrDisconnected);
+            }
+        }
 
-            pnAuth2Cli_AcctLoginReply reply = new pnAuth2Cli_AcctLoginReply();
-            reply.fResult = ENetError.kNetSuccess; // Change this if we fail somewhere...
-            reply.fTransID = req.fTransID;
-
-            List<pnAuth2Cli_AcctPlayerInfo> players = new List<pnAuth2Cli_AcctPlayerInfo>();
-            try {
-                // TODO: Move to vault server?
-                IDbConnection db = pnDatabase.Connect();
-                
-                // Try to select this account...
-                pnSqlSelectStatement acct = new pnSqlSelectStatement();
-                acct.AddColumn("Idx");
-                acct.AddColumn("Password");
-                acct.AddColumn("Permissions");
-                acct.AddColumn("Guid");
-                acct.AddWhere("Username", req.fAccount);
-                acct.Limit = 1;
-                acct.Table = "Accounts";
-                IDataReader r = acct.Execute(db);
-
-                uint? acctID = new uint?();
-                if (r.Read()) {
-                    // eap has made this password thing difficult for us...
-                    // Usernames that are email addresses do some strange SHA-0 stuff,
-                    // but normal usernames are just a SHA-1 hash. Lawd help us.
-                    byte[] gPass = pnHelpers.GetBytes(r["Password"].ToString());
-                    if (req.fAccount.Contains('@'))
-                        gPass = pnHelpers.HashLogin(gPass, req.fChallenge, fChallenge);
-
-                    // ... Nice, Microsoft. Neither the == operator nor the Equals method
-                    // actually tests the values >.<
-                    if (gPass.SequenceEqual(req.fHash)) {
-                        acctID = (uint)r["Idx"];
-                        reply.fAcctGuid = new Guid(r["Guid"].ToString());
-                        reply.fBillingType = 1; // HACK -- Always create explorers
-                        reply.fDroidKey = null; // TODO
-                        fPermissions = (Permissions)((int)r["Permissions"]);
-                        if (fPermissions == Permissions.Banned)
-                            reply.fResult = ENetError.kNetErrAccountBanned;
-                        else
-                            // An empty AcctGuid signifies that we have NOT logged in
-                            fAcctGuid = reply.fAcctGuid;
-                    } else
-                        reply.fResult = ENetError.kNetErrAuthenticationFailed;
-                } else
-                    // I realize there is an "Account Not Found" Error, but that's
-                    // kind of a security hole.
-                    reply.fResult = ENetError.kNetErrAuthenticationFailed;
-                r.Close();
-
-                // If we know the AccountID, then we have a valid player, so let's
-                // prepare a list of avatars
-                if (acctID.HasValue) {
-                    pnSqlSelectStatement avatars = new pnSqlSelectStatement();
-                    avatars.AddColumn("Model");
-                    avatars.AddColumn("Name");
-                    avatars.AddColumn("PlayerIdx");
-                    avatars.AddWhere("AcctIdx", acctID.Value.ToString());
-                    avatars.Limit = 5;
-                    avatars.Table = "Players";
-                    r = avatars.Execute(db);
-
-                    while (r.Read()) {
-                        pnAuth2Cli_AcctPlayerInfo info = new pnAuth2Cli_AcctPlayerInfo();
-                        info.fExplorer = 1;
-                        info.fModel = r["Model"].ToString();
-                        info.fPlayerID = (uint)r["PlayerIdx"];
-                        info.fPlayerName = r["Name"].ToString();
-                        info.fTransID = req.fTransID;
-                        players.Add(info);
-                    }
-
-                    r.Close();
-                }
-
-                db.Close();
-            } catch (pnDbException e) {
-                Error(e, "Database Error on Login");
-                reply.fResult = ENetError.kNetErrInternalError;
+        private void IOnAcctLoggedIn(ENetError result, Guid guid, int perms, pnVaultAvatarInfo[] avatars, object param) {
+            if (result == ENetError.kNetSuccess) {
+                fAcctGuid = guid;
+                fPermissions = (pnAcctPerms)perms;
             }
 
-            foreach (pnAuth2Cli_AcctPlayerInfo player in players)
-                player.Send(fStream);
-            reply.Send(fStream);
+            List<plNetStruct> toSend = new List<plNetStruct>(6);
+            if (avatars != null) {
+                foreach (pnVaultAvatarInfo info in avatars) {
+                    pnAuth2Cli_AcctPlayerInfo player = new pnAuth2Cli_AcctPlayerInfo();
+                    player.fExplorer = 1; // HACK--always a "paying customer"
+                    player.fModel = info.fModel;
+                    player.fPlayerID = info.fPlayerID;
+                    player.fPlayerName = info.fPlayerName;
+                    player.fTransID = Convert.ToUInt32(param);
+                    toSend.Add(player);
+                }
+            }
+
+            pnAuth2Cli_AcctLoginReply reply = new pnAuth2Cli_AcctLoginReply();
+            reply.fAcctGuid = guid;
+            reply.fBillingType = 1; // HACK--always a "paying customer"
+            reply.fDroidKey = null; // FIXME
+            reply.fResult = result;
+            reply.fTransID = Convert.ToUInt32(param);
+            toSend.Add(reply);
+
+            // Only acquire this lock once :)
+            lock (fStream)
+                foreach (plNetStruct ns in toSend)
+                    ns.Send(fStream);
         }
 
         private void IOnPlayerCreated(ENetError result, uint playerID, string playerName, string shape, object param) {
@@ -148,6 +103,14 @@ namespace Plasma {
             reply.fPlayerName = playerName;
             reply.fResult = result;
             reply.fShape = shape;
+            reply.fTransID = (uint)param;
+            fPlayerIdx = playerID; // Cyan is hacking...
+            lock (fStream) reply.Send(fStream);
+        }
+
+        private void IOnPlayerSet(ENetError result, object param) {
+            pnAuth2Cli_AcctSetPlayerReply reply = new pnAuth2Cli_AcctSetPlayerReply();
+            reply.fResult = result;
             reply.fTransID = (uint)param;
             lock (fStream) reply.Send(fStream);
         }
@@ -175,7 +138,15 @@ namespace Plasma {
             pnCli2Auth_AcctSetPlayerRequest req = new pnCli2Auth_AcctSetPlayerRequest();
             req.Read(fStream);
 
-            // TODO
+            if (fAcctGuid == Guid.Empty) {
+                pnAuth2Cli_AcctSetPlayerReply reply = new pnAuth2Cli_AcctSetPlayerReply();
+                reply.fResult = ENetError.kNetErrPlayerNotFound;
+                reply.fTransID = req.fTransID;
+                reply.Send(fStream);
+            } else {
+                fVaultCli.SetPlayer(req.fPlayerID, fAcctGuid,
+                    new pnCallback(new pnVaultPlayerSet(IOnPlayerSet), req.fTransID));
+            }
         }
     }
 }

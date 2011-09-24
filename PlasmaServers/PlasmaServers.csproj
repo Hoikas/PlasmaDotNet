@@ -50,6 +50,7 @@
     <Compile Include="AuthSrv\Server.cs" />
     <Compile Include="AuthSrv\SessionAccount.cs" />
     <Compile Include="AuthSrv\SessionCore.cs" />
+    <Compile Include="AuthSrv\SessionVault.cs" />
     <Compile Include="Db\Database.cs" />
     <Compile Include="Db\CreateTable.cs" />
     <Compile Include="Db\InsertStatement.cs" />
@@ -60,6 +61,7 @@
     <Compile Include="SrvCore\Session.cs" />
     <Compile Include="VaultSrv\Server.cs" />
     <Compile Include="VaultSrv\SessionCore.cs" />
+    <Compile Include="VaultSrv\SessionNodes.cs" />
     <Compile Include="VaultSrv\SessionNodeUtils.cs" />
     <Compile Include="VaultSrv\SessionPlayer.cs" />
   </ItemGroup>

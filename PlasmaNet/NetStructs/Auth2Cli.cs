@@ -143,6 +143,25 @@ namespace Plasma {
         }
     }
 
+    public class pnAuth2Cli_AcctSetPlayerReply : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_AcctSetPlayerReply; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+        }
+    }
+
     public class pnAuth2Cli_ClientRegisterReply : plNetStruct {
         public uint fChallenge;
 
@@ -250,9 +269,13 @@ namespace Plasma {
         public override void Write(hsStream s) {
             s.WriteUInt(fTransID);
             s.WriteInt((int)fResult);
-            s.WriteInt(fNodeRefs.Length);
-            foreach (pnVaultNodeRef r in fNodeRefs)
-                r.Write(s);
+            if (fNodeRefs == null)
+                s.WriteInt(0);
+            else {
+                s.WriteInt(fNodeRefs.Length);
+                foreach (pnVaultNodeRef r in fNodeRefs)
+                    r.Write(s);
+            }
         }
     }
 }

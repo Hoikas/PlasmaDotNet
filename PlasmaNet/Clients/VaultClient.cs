@@ -27,11 +27,38 @@ namespace Plasma {
             base.IOnConnect();
         }
 
+        public void AcctLogin(string user, byte[] hash, uint cliChg, uint srvChg, pnCallback cb) {
+            pnCli2Vault_AcctLoginRequest req = new pnCli2Vault_AcctLoginRequest();
+            req.fAccount = user;
+            req.fCliChg = cliChg;
+            req.fHash = hash;
+            req.fSrvChg = srvChg;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
         public void CreatePlayer(Guid acct, string name, string shape, pnCallback cb) {
             pnCli2Vault_PlayerCreateRequest req = new pnCli2Vault_PlayerCreateRequest();
             req.fAcctGuid = acct;
             req.fPlayerName = name;
             req.fShape = shape;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
+        public void FetchNodeRefs(uint nodeID, pnCallback cb) {
+            pnCli2Vault_FetchNodeRefs req = new pnCli2Vault_FetchNodeRefs();
+            req.fNodeID = nodeID;
             req.fTransID = GetTransID();
 
             lock (fStream) {
@@ -54,16 +81,38 @@ namespace Plasma {
             }
         }
 
+        public void SetPlayer(uint playerID, Guid acct, pnCallback cb) {
+            pnCli2Vault_PlayerSetRequest req = new pnCli2Vault_PlayerSetRequest();
+            req.fAcctGuid = acct;
+            req.fPlayerID = playerID;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
         protected override void OnReceive() {
             try {
                 lock (fStream) {
                     pnVault2Cli msgID = (pnVault2Cli)fStream.ReadUShort();
                     switch (msgID) {
+                        case pnVault2Cli.kVault2Cli_AcctLoginReply:
+                            ILoggedIn();
+                            break;
+                        case pnVault2Cli.kVault2Cli_NodeRefsFetched:
+                            INodeRefsFetched();
+                            break;
                         case pnVault2Cli.kVault2Cli_PingReply:
                             IPingPong();
                             break;
                         case pnVault2Cli.kVault2Cli_PlayerCreateReply:
                             IPlayerCreated();
+                            break;
+                        case pnVault2Cli.kVault2Cli_PlayerSetReply:
+                            IPlayerSet();
                             break;
                     }
 
@@ -80,6 +129,18 @@ namespace Plasma {
             }
         }
 
+        private void ILoggedIn() {
+            pnVault2Cli_AcctLoginReply reply = new pnVault2Cli_AcctLoginReply();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fAcctGuid, reply.fPermissions, reply.fAvatars });
+        }
+
+        private void INodeRefsFetched() {
+            pnVault2Cli_NodeRefsFetched reply = new pnVault2Cli_NodeRefsFetched();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fNodeRefs });
+        }
+
         private void IPingPong() {
             pnVault2Cli_PingReply reply = new pnVault2Cli_PingReply();
             reply.Read(fStream);
@@ -91,8 +152,17 @@ namespace Plasma {
             reply.Read(fStream);
             FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fPlayerID, reply.fPlayerName, reply.fShape });
         }
+
+        private void IPlayerSet() {
+            pnVault2Cli_PlayerSetReply reply = new pnVault2Cli_PlayerSetReply();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult });
+        }
     }
 
+    public delegate void pnVaultAcctLoggedIn(ENetError result, Guid guid, int perms, pnVaultAvatarInfo[] avatars, object param);
+    public delegate void pnVaultNodeRefsFetched(ENetError result, pnVaultNodeRef[] refs, object param);
     public delegate void pnVaultPlayerCreated(ENetError result, uint playerID, string playerName, string shape, object param);
+    public delegate void pnVaultPlayerSet(ENetError result, object param);
     public delegate void pnVaultPong(uint pingTimeMs, byte[] payload, object param);
 }

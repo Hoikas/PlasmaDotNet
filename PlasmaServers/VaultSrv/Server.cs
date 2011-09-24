@@ -34,7 +34,6 @@ namespace Plasma {
 
         List<pnVaultSession> fSessions = new List<pnVaultSession>();
         plDebugLog fLog = plDebugLog.GetLog("VaultSrv");
-        bool fPopulateTaskDone = false;
 
         public void CheckDb() {
             IDbConnection db = pnDatabase.Connect();
@@ -103,10 +102,6 @@ namespace Plasma {
 
             lock (fSessions) {
                 fSessions.Add(vc);
-                if (!fPopulateTaskDone) {
-                    fPopulateTaskDone = true;
-                    vc.PopulateVault();
-                }
             }
         }
 

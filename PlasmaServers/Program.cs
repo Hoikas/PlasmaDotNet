@@ -66,7 +66,7 @@ namespace Plasma {
                 Console.WriteLine("Usage: addacct <username> <password> [permissions]");
                 Console.Write("Valid Permissions:");
 
-                string[] perms = Enum.GetNames(typeof(pnAuthSession.Permissions));
+                string[] perms = Enum.GetNames(typeof(pnAcctPerms));
                 foreach (string perm in perms)
                     Console.Write(" " + perm);
                 Console.WriteLine();
@@ -74,11 +74,11 @@ namespace Plasma {
             }
 
             // Get our permissions
-            int oPerm = (int)pnAuthSession.Permissions.Explorer;
+            int oPerm = (int)pnAcctPerms.Explorer;
             Guid oGuid = Guid.NewGuid();
             if (args.Length > 2) {
                 try {
-                    oPerm = (int)Enum.Parse(typeof(pnAuthSession.Permissions), args[2], true);
+                    oPerm = (int)Enum.Parse(typeof(pnAcctPerms), args[2], true);
                 } catch (ArgumentException) {
                     Console.WriteLine(String.Format("Error: Undefined permission level '{0}'", args[2]));
                     return;

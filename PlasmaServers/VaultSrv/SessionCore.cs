@@ -38,6 +38,7 @@ namespace Plasma {
                 return false;
             }
 
+            PopulateVault();
             return IInitialize("Vault");
         }
 
@@ -48,11 +49,20 @@ namespace Plasma {
                     pnCli2Vault msgID = (pnCli2Vault)fStream.ReadUShort();
 
                     switch (msgID) {
+                        case pnCli2Vault.kCli2Vault_AcctLoginRequest:
+                            IAcctLogin();
+                            break;
+                        case pnCli2Vault.kCli2Vault_FetchNodeRefs:
+                            //IFetchNodeRefs();
+                            break;
                         case pnCli2Vault.kCli2Vault_PingRequest:
                             IPingPong();
                             break;
                         case pnCli2Vault.kCli2Vault_PlayerCreateRequest:
                             ICreatePlayer();
+                            break;
+                        case pnCli2Vault.kCli2Vault_PlayerSetRequest:
+                            ISetPlayer();
                             break;
                         default:
                             // TODO: Kick Off properly
