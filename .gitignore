@@ -2,6 +2,7 @@ bin/
 obj/
 WhoM/
 
+*.csproj.user
 *.exe
 *.suo
 

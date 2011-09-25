@@ -7,7 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 
 namespace Plasma {
-    public class pnVaultClient : pnSynchClient {
+    public class pnVaultClient : plNetClient {
         public pnVaultClient() : base() {
             fConnHdr.fType = ENetProtocol.kConnTypeSrvToVault;
         }
@@ -20,14 +20,14 @@ namespace Plasma {
 
             // Encryption
             if (!base.INetCliConnect(bs, 2011))
-                throw new plNetException("Modified DH exchange failed");
+                Close();
             bs.Close();
 
             // Listen
             base.IOnConnect();
         }
 
-        public void AcctLogin(string user, byte[] hash, uint cliChg, uint srvChg, pnCallback cb) {
+        public void AcctLogin(string user, byte[] hash, uint cliChg, uint srvChg, pnCallback cb = null) {
             pnCli2Vault_AcctLoginRequest req = new pnCli2Vault_AcctLoginRequest();
             req.fAccount = user;
             req.fCliChg = cliChg;
@@ -42,7 +42,7 @@ namespace Plasma {
             }
         }
 
-        public void CreatePlayer(Guid acct, string name, string shape, pnCallback cb) {
+        public void CreatePlayer(Guid acct, string name, string shape, pnCallback cb = null) {
             pnCli2Vault_PlayerCreateRequest req = new pnCli2Vault_PlayerCreateRequest();
             req.fAcctGuid = acct;
             req.fPlayerName = name;
@@ -56,7 +56,7 @@ namespace Plasma {
             }
         }
 
-        public void FetchNodeRefs(uint nodeID, pnCallback cb) {
+        public void FetchNodeRefs(uint nodeID, pnCallback cb = null) {
             pnCli2Vault_FetchNodeRefs req = new pnCli2Vault_FetchNodeRefs();
             req.fNodeID = nodeID;
             req.fTransID = GetTransID();
@@ -68,7 +68,7 @@ namespace Plasma {
             }
         }
 
-        public void Ping(uint ms, byte[] payload, pnCallback cb) {
+        public void Ping(uint ms, byte[] payload, pnCallback cb = null) {
             pnCli2Vault_PingRequest req = new pnCli2Vault_PingRequest();
             req.fPayload = payload;
             req.fPingTimeMs = ms;
@@ -81,7 +81,7 @@ namespace Plasma {
             }
         }
 
-        public void SetPlayer(uint playerID, Guid acct, pnCallback cb) {
+        public void SetPlayer(uint playerID, Guid acct, pnCallback cb = null) {
             pnCli2Vault_PlayerSetRequest req = new pnCli2Vault_PlayerSetRequest();
             req.fAcctGuid = acct;
             req.fPlayerID = playerID;
@@ -120,43 +120,47 @@ namespace Plasma {
                 }
             } catch (EndOfStreamException) {
                 // Disconnected in a strange way
+                IDisconnected();
                 return;
             } catch (SocketException) {
                 // Connection Reset OR something weird happened
+                IDisconnected();
                 return;
             } catch (ObjectDisposedException) {
                 // The socket was closed.
+                IDisconnected();
+                return;
             }
         }
 
         private void ILoggedIn() {
             pnVault2Cli_AcctLoginReply reply = new pnVault2Cli_AcctLoginReply();
             reply.Read(fStream);
-            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fAcctGuid, reply.fPermissions, reply.fAvatars });
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fAcctGuid, reply.fPermissions, reply.fAvatars, null });
         }
 
         private void INodeRefsFetched() {
             pnVault2Cli_NodeRefsFetched reply = new pnVault2Cli_NodeRefsFetched();
             reply.Read(fStream);
-            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fNodeRefs });
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fNodeRefs, null });
         }
 
         private void IPingPong() {
             pnVault2Cli_PingReply reply = new pnVault2Cli_PingReply();
             reply.Read(fStream);
-            FireCallback(reply.fTransID, new object[] { reply.fPingTimeMs, reply.fPayload });
+            FireCallback(reply.fTransID, new object[] { reply.fPingTimeMs, reply.fPayload, null });
         }
 
         private void IPlayerCreated() {
             pnVault2Cli_PlayerCreateReply reply = new pnVault2Cli_PlayerCreateReply();
             reply.Read(fStream);
-            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fPlayerID, reply.fPlayerName, reply.fShape });
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fPlayerID, reply.fPlayerName, reply.fShape, null });
         }
 
         private void IPlayerSet() {
             pnVault2Cli_PlayerSetReply reply = new pnVault2Cli_PlayerSetReply();
             reply.Read(fStream);
-            FireCallback(reply.fTransID, new object[] { reply.fResult });
+            FireCallback(reply.fTransID, new object[] { reply.fResult, null });
         }
     }
 

@@ -13,8 +13,8 @@ namespace Plasma {
 
         protected plBufferedStream fStream;
         protected Socket fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private SocketAsyncEventArgs fSocketArgs = new SocketAsyncEventArgs();
         protected pnCli2Srv_Connect fConnHdr = new pnCli2Srv_Connect();
-        ManualResetEvent fWaitOnConnect = new ManualResetEvent(false);
 
         protected IPAddress fHost;
         protected int fPort = 14617;
@@ -35,9 +35,8 @@ namespace Plasma {
             set { fConnHdr.fBuildID = value; }
         }
 
-        public bool Connected {
-            get { return fSocket.Connected; }
-        }
+        public event Action Connected;
+        public event Action Disconnected;
 
         public string Host {
             get { return fHost.ToString(); }
@@ -74,6 +73,13 @@ namespace Plasma {
         }
 
         /// <summary>
+        /// Gets whether or not the socket is currently connected
+        /// </summary>
+        public bool SocketConnected {
+            get { return fSocket.Connected; }
+        }
+
+        /// <summary>
         /// Gets or sets a base64 representation of the XKey in OpenSSL byte order
         /// </summary>
         public string X {
@@ -86,27 +92,42 @@ namespace Plasma {
             set { fConnHdr.fProtocolVer = value; }
         }
 
-        public void Connect() {
-            // We're probably not going to get any performance increase from ConnectAsync
-            // because (in most cases) we will only connect a client once, then throw it away.
-            fSocket.BeginConnect(fHost, fPort, new AsyncCallback(IOnConnect), null);
+        public plNetClient() {
+            fSocketArgs.SetBuffer(new byte[0], 0, 0);
+            fSocket.NoDelay = true; // Match Cyan.
         }
 
-        private void IOnConnect(IAsyncResult ar) {
-            fSocket.EndConnect(ar);
-            fSocket.NoDelay = true; // Match Cyan.
+        public void ConnectAsync() {
+            // Cache the callback so we can pop it off later
+            fSocketArgs.UserToken = new EventHandler<SocketAsyncEventArgs>(IOnConnect);
+            fSocketArgs.Completed += (EventHandler<SocketAsyncEventArgs>)fSocketArgs.UserToken;
+            fSocketArgs.RemoteEndPoint = new IPEndPoint(fHost, fPort);
+
+            if (!fSocket.ConnectAsync(fSocketArgs)) {
+                fSocketArgs.Completed -= (EventHandler<SocketAsyncEventArgs>)fSocketArgs.UserToken;
+                IOnConnect();
+                if (Connected != null)
+                    Connected();
+            }
+        }
+
+        public void ConnectSync() {
+            fSocket.Connect(fHost, fPort);
             IOnConnect();
+            if (Connected != null)
+                Connected();
+        }
+
+        private void IOnConnect(object sender, SocketAsyncEventArgs e) {
+            e.Completed -= (EventHandler<SocketAsyncEventArgs>)e.UserToken;
+            IOnConnect();
+            if (Connected != null)
+                Connected();
         }
 
         protected virtual void IOnConnect() {
-            fWaitOnConnect.Set();
-        }
-
-        /// <summary>
-        /// Blocks the current thread until a connection has been established.
-        /// </summary>
-        public void WaitForConnection() {
-            fWaitOnConnect.WaitOne();
+            fSocketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IReceive);
+            IReceive();
         }
 
         public void Close() {
@@ -114,23 +135,21 @@ namespace Plasma {
             fSocket.Shutdown(SocketShutdown.Both); // Be nice
             fSocket.Close();
             fCallbacks.Clear();
-            fWaitOnConnect.Reset();
+            IDisconnected();
+        }
+
+        protected void IDisconnected() {
+            if (Disconnected != null)
+                Disconnected();
         }
 
         protected void FireCallback(uint transID, object[] param) {
             if (fCallbacks.ContainsKey(transID)) {
                 pnCallback cb = fCallbacks[transID];
                 fCallbacks.Remove(transID);
+                param[param.Length - 1] = cb.Parameter; // Better have the right size array...
 
-                object[] args;
-                if (cb.Parameter == null) args = param;
-                else {
-                    args = new object[param.Length + 1];
-                    param.CopyTo(args, 0);
-                    args[args.Length - 1] = cb.Parameter;
-                }
-
-                cb.Callback.DynamicInvoke(args);
+                cb.Callback.DynamicInvoke(param);
             }
         }
 
@@ -147,12 +166,24 @@ namespace Plasma {
             byte[] cli = ISetupKeys(bs, gval);
             byte[] srv = IReadNetClientEncrypt(bs);
             if (srv == null) return false;
-            ISetupEncryption(srv, cli);
-
-            return true;
+            return ISetupEncryption(srv, cli);
         }
 
-        private void ISetupEncryption(byte[] srv, byte[] cli) {
+        protected void IReceive() {
+            if (!fSocket.ReceiveAsync(fSocketArgs))
+                OnReceive();
+        }
+
+        private void IReceive(object sender, SocketAsyncEventArgs args) {
+            OnReceive();
+        }
+
+        protected abstract void OnReceive();
+
+        private bool ISetupEncryption(byte[] srv, byte[] cli) {
+            if (srv == null || cli == null)
+                return false;
+
             byte[] key = new byte[7];
             for (int i = 0; i < 7; i++) {
                 if (i >= cli.Length) key[i] = srv[i];
@@ -160,6 +191,7 @@ namespace Plasma {
             }
 
             fStream = new plBufferedStream(new pnSocketStream(fSocket, key));
+            return true;
         }
 
         private byte[] ISetupKeys(plBufferedStream s, int gval) {
@@ -201,6 +233,9 @@ namespace Plasma {
         }
     }
 
+    /// <summary>
+    /// Specifies an asynchronous callback that is executed after the completion of a network transaction
+    /// </summary>
     public class pnCallback {
 
         Delegate fFunction;
@@ -226,39 +261,4 @@ namespace Plasma {
         public pnCallback(Delegate cb) { fFunction = cb; }
         public pnCallback(Delegate cb, object param) { fFunction = cb; fParam = param; }
     }
-
-    /// <summary>
-    /// Base client that performs synchronous reads.
-    /// </summary>
-    /// <remarks>
-    /// This is compatible with the Cyan-Style Auth, Game, and Gate
-    /// </remarks>
-    public abstract class pnSynchClient : plNetClient {
-
-        SocketAsyncEventArgs fReceiveArgs = new SocketAsyncEventArgs();
-
-        public pnSynchClient() {
-            fReceiveArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IReceive);
-            fReceiveArgs.SetBuffer(new byte[0], 0, 0); // We just want to be notified when we can read.
-        }
-
-        protected override void IOnConnect() {
-            base.IOnConnect();
-            IReceive();
-        }
-
-        protected void IReceive() {
-            if (!fSocket.ReceiveAsync(fReceiveArgs))
-                OnReceive();
-        }
-
-        private void IReceive(object sender, SocketAsyncEventArgs args) {
-            OnReceive();
-        }
-
-        protected abstract void OnReceive();
-    }
-
-    // TODO: pnAsynchClient? [For pnFileClient]
-    // Would use ReceiveAsync rather than synchronous reads.
 }

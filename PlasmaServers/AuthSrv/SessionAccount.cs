@@ -55,9 +55,17 @@ namespace Plasma {
             req.Read(fStream);
 
             if (fAcctGuid == Guid.Empty) {
-                fVaultCli.WaitForConnection();
-                fVaultCli.AcctLogin(req.fAccount, req.fHash, req.fChallenge, fChallenge,
-                    new pnCallback(new pnVaultAcctLoggedIn(IOnAcctLoggedIn), req.fTransID));
+                // This is the first time we need the vault connection,
+                // so let's establish it here.
+                if (IConnectToVault()) {
+                    fVaultCli.AcctLogin(req.fAccount, req.fHash, req.fChallenge, fChallenge,
+                        new pnCallback(new pnVaultAcctLoggedIn(IOnAcctLoggedIn), req.fTransID));
+                } else {
+                    pnAuth2Cli_AcctLoginReply reply = new pnAuth2Cli_AcctLoginReply();
+                    reply.fResult = ENetError.kNetErrInternalError;
+                    reply.fTransID = req.fTransID;
+                    reply.Send(fStream);
+                }
             } else {
                 // A special kind of stupid... time to get what you deserve.
                 KickOff(ENetError.kNetErrDisconnected);

@@ -22,7 +22,7 @@ namespace Plasma {
         }
 
         public override void End() {
-            if (fVaultCli.Connected) fVaultCli.Close();
+            if (fVaultCli.SocketConnected) fVaultCli.Close();
             fParent.RemoveClient(this);
         }
 
@@ -38,25 +38,6 @@ namespace Plasma {
             // If contains nothing useful here, so we'll just throw it away
             fSocket.Receive(new byte[20], 20, SocketFlags.None);
 
-            // Try to connect to the VaultSrv
-            pnIniParser ini = pngIni.Ini;
-            fVaultCli.Host = ini["Server.Vault"];
-            fVaultCli.N = ini["Server.Vault.N"];
-            fVaultCli.ProductID = ini.GetGuid("Server.ProductID");
-            fVaultCli.X = ini["Server.Vault.X"];
-            try {
-                fVaultCli.Connect();
-            } catch (Exception e) {
-#if DEBUG
-                throw e;
-#else
-                Error(e, "Failed to connect to VaultSrv");
-                reply.fResult = ENetError.kNetErrInternalError;
-                reply.Send(fStream);
-                return;
-#endif
-            }
-
             // Note: We won't actually connect to the VaultSrv until the player
             //       tries to log in.
             return IInitialize("Auth");
@@ -71,6 +52,28 @@ namespace Plasma {
             }
 
             Close();
+        }
+
+        private bool IConnectToVault() {
+            // Try to connect to the VaultSrv
+            pnIniParser ini = pngIni.Ini;
+            fVaultCli.Host = ini["Server.Vault"];
+            fVaultCli.N = ini["Server.Vault.N"];
+            fVaultCli.ProductID = ini.GetGuid("Server.ProductID");
+            fVaultCli.X = ini["Server.Vault.X"];
+            try {
+                fVaultCli.ConnectSync();
+                return true;
+            } catch (Exception e) {
+#if DEBUG
+                throw e;
+#else
+                Error(e, "Failed to connect to VaultSrv");
+                reply.fResult = ENetError.kNetErrInternalError;
+                reply.Send(fStream);
+                return false;
+#endif
+            }
         }
 
         protected override void ReadMsg() {

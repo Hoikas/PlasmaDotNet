@@ -22,6 +22,22 @@ namespace Plasma {
         kCli2File_UNUSED_1 = 30,
     }
 
+    public class pnCli2File_BuildIdRequest : plNetStruct {
+        public uint fTransID;
+
+        protected override object MsgID {
+            get { return (uint)pnCli2File.kCli2File_BuildIdRequest; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+        }
+    }
+
     public class pnCli2File_PingRequest : plNetStruct {
         public uint fPingTimeMs;
 
