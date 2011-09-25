@@ -58,7 +58,7 @@ namespace Plasma {
             }
         }
 
-        public void Ping(uint ms, byte[] payload, pnCallback cb = null) {
+        public void Ping(uint ms, byte[] payload = null, pnCallback cb = null) {
             pnCli2Gate_PingRequest req = new pnCli2Gate_PingRequest();
             req.fPayload = payload;
             req.fPingTimeMs = ms;
@@ -85,6 +85,12 @@ namespace Plasma {
                         case pnGate2Cli.kGateKeeper2Cli_PingReply:
                             IPingReply();
                             break;
+                        default:
+#if DEBUG
+                            throw new NotSupportedException();
+#endif
+                            Close();
+                            break;
                     }
                 }
             } catch (EndOfStreamException) {
@@ -100,6 +106,8 @@ namespace Plasma {
                 IDisconnected();
                 return;
             }
+
+            IReceive();
         }
 
         private void IAuthSrvIpReply() {

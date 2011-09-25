@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 
 namespace Plasma {
@@ -248,8 +249,54 @@ namespace Plasma {
         }
     }
 
-    public class pnAuth2Cli_VaultNodeRefsFetched : plNetStruct {
+    public class pnAuth2Cli_ServerAddr : plNetStruct {
+        public IPAddress fAddress;
+        public Guid fToken;
 
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_ServerAddr; }
+        }
+
+        public override void Read(hsStream s) {
+            fAddress = new IPAddress((long)s.ReadInt());
+            fToken = pnHelpers.ReadUuid(s);
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteInt((int)fAddress.Address); // Ugh, Cyan
+            pnHelpers.WriteUuid(s, fToken);
+        }
+    }
+
+    public class pnAuth2Cli_VaultNodeFetched : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+        public pnVaultNode fNode;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultNodeFetched; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+            fNode = pnVaultNode.Parse(s.ReadBytes(s.ReadInt()));
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            if (fNode == null)
+                s.WriteInt(0);
+            else {
+                byte[] buf = fNode.ToArray();
+                s.WriteInt(buf.Length);
+                s.WriteBytes(buf);
+            }
+        }
+    }
+
+    public class pnAuth2Cli_VaultNodeRefsFetched : plNetStruct {
         public uint fTransID;
         public ENetError fResult;
         public pnVaultNodeRef[] fNodeRefs;

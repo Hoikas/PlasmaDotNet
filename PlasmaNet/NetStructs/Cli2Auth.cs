@@ -226,12 +226,30 @@ namespace Plasma {
     }
 
     public class pnCli2Auth_VaultFetchNodeRefs : plNetStruct {
-
         public uint fTransID;
         public uint fNodeID;
 
         protected override object MsgID {
             get { return (ushort)pnCli2Auth.kCli2Auth_VaultFetchNodeRefs; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fNodeID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUInt(fNodeID);
+        }
+    }
+
+    public class pnCli2Auth_VaultNodeFetch : plNetStruct {
+        public uint fTransID;
+        public uint fNodeID;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Auth.kCli2Auth_VaultNodeFetch; }
         }
 
         public override void Read(hsStream s) {

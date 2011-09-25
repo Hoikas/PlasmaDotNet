@@ -68,7 +68,7 @@ namespace Plasma {
             }
         }
 
-        public void Ping(uint ms, byte[] payload, pnCallback cb = null) {
+        public void Ping(uint ms, byte[] payload = null, pnCallback cb = null) {
             pnCli2Vault_PingRequest req = new pnCli2Vault_PingRequest();
             req.fPayload = payload;
             req.fPingTimeMs = ms;
@@ -115,8 +115,6 @@ namespace Plasma {
                             IPlayerSet();
                             break;
                     }
-
-                    IReceive();
                 }
             } catch (EndOfStreamException) {
                 // Disconnected in a strange way
@@ -131,6 +129,8 @@ namespace Plasma {
                 IDisconnected();
                 return;
             }
+
+            IReceive();
         }
 
         private void ILoggedIn() {

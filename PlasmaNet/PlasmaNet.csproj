@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Clients\AuthClient.cs" />
     <Compile Include="Clients\FileClient.cs" />
     <Compile Include="Clients\GateClient.cs" />
     <Compile Include="Core\Enums.cs" />
