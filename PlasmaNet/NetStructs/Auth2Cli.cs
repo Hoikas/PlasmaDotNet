@@ -280,7 +280,10 @@ namespace Plasma {
         public override void Read(hsStream s) {
             fTransID = s.ReadUInt();
             fResult = (ENetError)s.ReadInt();
-            fNode = pnVaultNode.Parse(s.ReadBytes(s.ReadInt()));
+            if (s.ReadInt() != 0) { // Vault Node buffer size
+                fNode = new pnVaultNode();
+                fNode.Read(s);
+            }
         }
 
         public override void Write(hsStream s) {

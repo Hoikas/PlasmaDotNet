@@ -14,9 +14,18 @@ namespace Plasma {
     }
 
     public partial class pnAuthSession {
+        class PlayerSetData {
+            public uint fTransID;
+            public uint fPlayerID;
+
+            public PlayerSetData(uint transID, uint playerID) {
+                fTransID = transID;
+                this.fPlayerID = playerID;
+            }
+        }
 
         Guid fAcctGuid;
-        uint fPlayerIdx;
+        uint fPlayerID;
         uint fChallenge;
         pnAcctPerms fPermissions;
 
@@ -112,14 +121,17 @@ namespace Plasma {
             reply.fResult = result;
             reply.fShape = shape;
             reply.fTransID = (uint)param;
-            fPlayerIdx = playerID; // Cyan is hacking...
+            fPlayerID = playerID; // Cyan is hacking...
             lock (fStream) reply.Send(fStream);
         }
 
         private void IOnPlayerSet(ENetError result, object param) {
+            PlayerSetData tag = (PlayerSetData)param;
+            fPlayerID = tag.fPlayerID;
+
             pnAuth2Cli_AcctSetPlayerReply reply = new pnAuth2Cli_AcctSetPlayerReply();
             reply.fResult = result;
-            reply.fTransID = (uint)param;
+            reply.fTransID = tag.fTransID;
             lock (fStream) reply.Send(fStream);
         }
 
@@ -153,7 +165,7 @@ namespace Plasma {
                 reply.Send(fStream);
             } else {
                 fVaultCli.SetPlayer(req.fPlayerID, fAcctGuid,
-                    new pnCallback(new pnVaultPlayerSet(IOnPlayerSet), req.fTransID));
+                    new pnCallback(new pnVaultPlayerSet(IOnPlayerSet), new PlayerSetData(req.fTransID, req.fPlayerID)));
             }
         }
     }

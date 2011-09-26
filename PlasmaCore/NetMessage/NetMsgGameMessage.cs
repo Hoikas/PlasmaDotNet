@@ -7,11 +7,10 @@ using System.Text;
 namespace Plasma {
     public class plNetMsgGameMessage : plNetMsgStream {
 
-        plUnifiedTime fDeliveryTime;
+        DateTime? fDeliveryTime;
 
-        public plUnifiedTime DeliveryTime {
+        public DateTime? DeliveryTime {
             get { return fDeliveryTime; }
-            set { fDeliveryTime = value; }
         }
 
         public plNetMsgGameMessage() {
@@ -34,11 +33,8 @@ namespace Plasma {
 
         public override void Read(hsStream s, plResManager mgr) {
             base.Read(s, mgr);
-
-            if (s.ReadBool()) {
-                fDeliveryTime = new plUnifiedTime();
-                fDeliveryTime.Read(s);
-            }
+            if (s.ReadBool())
+                fDeliveryTime = plUnifiedTime.Read(s);
         }
 
         public void SetMessage(plMessage msg, plResManager mgr) {
@@ -58,9 +54,9 @@ namespace Plasma {
         public override void Write(hsStream s, plResManager mgr) {
             base.Write(s, mgr);
 
-            s.WriteBool(fDeliveryTime != null);
-            if (fDeliveryTime != null)
-                fDeliveryTime.Write(s);
+            s.WriteBool(fDeliveryTime.HasValue);
+            if (fDeliveryTime.HasValue)
+                plUnifiedTime.Write(s, fDeliveryTime.Value);
         }
     }
 

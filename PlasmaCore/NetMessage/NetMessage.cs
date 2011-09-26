@@ -32,7 +32,7 @@ namespace Plasma {
 
         protected BitVectorFlags fFlags;
         byte fVerMajor = 12, fVerMinor = 6;
-        plUnifiedTime fTimeSent;
+        DateTime fTimeSent = plUnifiedTime.Epoch;
         uint fContext, fTransID, fPlayerID;
         Guid fAcctUUID;
 
@@ -160,7 +160,7 @@ namespace Plasma {
             }
         }
 
-        public plUnifiedTime TimeSent {
+        public DateTime TimeSent {
             get { return fTimeSent; }
             set {
                 if (value == null && fTimeSent != null)
@@ -190,7 +190,7 @@ namespace Plasma {
             }
 
             if (HasTimeSent)
-                fTimeSent = new plUnifiedTime(s);
+                fTimeSent = plUnifiedTime.Read(s);
             if (HasContext)
                 fContext = s.ReadUInt();
             if (HasTransID)
@@ -210,7 +210,7 @@ namespace Plasma {
             }
 
             if (HasTimeSent)
-                fTimeSent.Write(s);
+                plUnifiedTime.Write(s, fTimeSent);
             if (HasContext)
                 s.WriteUInt(fContext);
             if (HasTransID)

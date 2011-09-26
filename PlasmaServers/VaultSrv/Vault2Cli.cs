@@ -61,8 +61,10 @@ namespace Plasma {
             fAcctGuid = pnHelpers.ReadUuid(s);
             fPermissions = s.ReadInt();
             fAvatars = new pnVaultAvatarInfo[s.ReadInt()];
-            for (int i = 0; i < fAvatars.Length; i++)
+            for (int i = 0; i < fAvatars.Length; i++) {
+                fAvatars[i] = new pnVaultAvatarInfo();
                 fAvatars[i].Read(s);
+            }
         }
 
         public override void Write(hsStream s) {

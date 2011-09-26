@@ -4,45 +4,35 @@ using System.Linq;
 using System.Text;
 
 namespace Plasma {
-    public class plUnifiedTime {
+    public static class plUnifiedTime {
 
-        private uint fSeconds;
-        private uint fMicroSecs;
-
-        public bool AtEpoch {
-            get { return (DateTime == Epoch); }
-        }
-
-        public DateTime DateTime {
-            get {
-                DateTime dt = Epoch.AddSeconds(Convert.ToDouble(fSeconds));
-                dt.AddTicks(Convert.ToInt64(fMicroSecs / 100));
-                return dt;
-            }
-
-            set {
-                TimeSpan ts = (value - Epoch);
-                fSeconds = Convert.ToUInt32(ts.TotalSeconds);
-                //Too lazy to use microseconds. Maybe later.
-            }
-        }
-
-        private DateTime Epoch {
+        /// <summary>
+        /// Gets the DateTime of the Unix Epoch
+        /// </summary>
+        public static DateTime Epoch {
             get { return new DateTime(1970, 1, 1, 0, 0, 0); }
         }
 
-        public plUnifiedTime() { this.DateTime = Epoch; }
-        public plUnifiedTime(DateTime dt) { this.DateTime = dt; }
-        public plUnifiedTime(hsStream s) { Read(s); }
+        public static DateTime Read(hsStream s) {
+            // Read in the data from the stream
+            double secs = (double)s.ReadUInt();
+            double micros = (double)s.ReadUInt();
 
-        public void Read(hsStream bs) {
-            fSeconds = bs.ReadUInt();
-            fMicroSecs = bs.ReadUInt();
+            // Now construct a .NET DateTime
+            DateTime dt = Epoch.AddSeconds(secs);
+            dt.AddMilliseconds(micros / 100);
+            return dt;
         }
 
-        public void Write(hsStream bs) {
-            bs.WriteUInt(fSeconds);
-            bs.WriteUInt(fMicroSecs);
+        public static void Write(hsStream s, DateTime dt) {
+            // Figure out the Seconds and Microseconds from the DateTime
+            TimeSpan ts = dt - Epoch;
+            uint seconds = (uint)ts.TotalSeconds;
+            uint micros = ((uint)(ts.TotalMilliseconds * 100.0d)) - seconds;
+
+            // Now write them to the stream
+            s.WriteUInt(seconds);
+            s.WriteUInt(micros);
         }
     }
 }

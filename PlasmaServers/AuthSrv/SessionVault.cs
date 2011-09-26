@@ -11,7 +11,7 @@ namespace Plasma {
             req.Read(fStream);
 
             // Can't fetch NodeRefs if we're not logged in...
-            if (fPlayerIdx == 0) {
+            if (fPlayerID == 0) {
                 pnAuth2Cli_VaultNodeRefsFetched reply = new pnAuth2Cli_VaultNodeRefsFetched();
                 reply.fResult = ENetError.kNetErrVaultNodeAccessViolation;
                 reply.fTransID = req.fTransID;

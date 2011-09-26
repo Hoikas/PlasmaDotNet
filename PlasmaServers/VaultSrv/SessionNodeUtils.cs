@@ -69,15 +69,20 @@ namespace Plasma {
         }
 
         private void ICreateNode(pnVaultNode node) {
-            Dictionary<string, object> dict = node.ToDictionary();
-
+            // TODO: Filter out bad fields
             pnSqlInsertStatement insert = new pnSqlInsertStatement();
-            foreach (KeyValuePair<string, object> kvp in dict)
-                insert.AddValue(kvp.Key, kvp.Value.ToString());
+            pnVaultNodeFields allFields = node.Fields;
+            for (ulong bit = 1; bit != 0 && bit <= (ulong)allFields; bit <<= 1) {
+                pnVaultNodeFields thisField = allFields & (pnVaultNodeFields)bit;
+                if ((int)thisField == 0) continue;
+
+                string colName = Enum.GetName(typeof(pnVaultNodeFields), thisField).Substring(1);
+                insert.AddValue(colName, node[thisField]);
+            }
+
             insert.Table = "Nodes";
             insert.Execute(fDb);
-
-            node.ID = pnDatabase.LastInsert(fDb);
+            node.NodeID = pnDatabase.LastInsert(fDb);
         }
 
         private bool ICreateRelationship(uint parent, uint child, uint saver) {
@@ -97,13 +102,17 @@ namespace Plasma {
         }
 
         private uint[] IFindNode(pnVaultNode node) {
-            Dictionary<string, object> dict = node.ToDictionary();
-
             pnSqlSelectStatement select = new pnSqlSelectStatement();
             select.AddColumn("Idx");
-            foreach (KeyValuePair<string, object> kvp in dict)
-                if (kvp.Key != "CreateTime" && kvp.Key != "ModifyTime") // FIXME
-                    select.AddWhere(kvp.Key, kvp.Value.ToString());
+            pnVaultNodeFields allFields = node.Fields;
+            for (ulong bit = 1; bit != 0 && bit <= (ulong)allFields; bit <<= 1) {
+                pnVaultNodeFields thisField = allFields & (pnVaultNodeFields)bit;
+                if ((int)thisField == 0) continue;
+
+                string colName = Enum.GetName(typeof(pnVaultNodeFields), thisField).Substring(1);
+                select.AddWhere(colName, node[thisField]);
+            }
+
             select.Limit = 500; // Match Cyan's functionality
             select.Table = "Nodes";
 
@@ -117,16 +126,7 @@ namespace Plasma {
         }
 
         private pnVaultNode IMakeNode(IDataReader r) {
-            pnVaultNode node = new pnVaultNode((ENodeType)((uint)r["NodeType"]), 
-                pnVaultNode.ToDateTime(Convert.ToUInt32(r["CreateTime"])),
-                pnVaultNode.ToDateTime(Convert.ToUInt32(r["ModifyTime"])));
-
-            node.CreateAgeName = r["CreateAgeName"].ToString();
-            node.CreateAgeUuid = new Guid(r["CreateAgeUuid"].ToString());
-            node.CreatorUuid = new Guid(r["CreatorUuid"].ToString());
-            // ...
-
-            return node;
+            throw new NotImplementedException();
         }
     }
 }

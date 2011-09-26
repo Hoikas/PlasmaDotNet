@@ -20,11 +20,11 @@ namespace Plasma {
         }
 
         public uint CreatorID {
-            get { return fBase.fCreatorIdx.Value; }
-            set { fBase.fCreatorIdx = value; }
+            get { return fBase.CreatorID; }
+            set { fBase.CreatorID = value; }
         }
 
-        public Guid CreatorUUID {
+        public Guid CreatorUuid {
             get { return fBase.CreatorUuid; }
             set { fBase.CreatorUuid = value; }
         }
@@ -33,7 +33,7 @@ namespace Plasma {
         /// Gets the node ID
         /// </summary>
         public uint NodeID {
-            get { return fBase.ID; }
+            get { return fBase.NodeID; }
         }
 
         public pnVaultNodeAccess() { }
@@ -44,18 +44,30 @@ namespace Plasma {
     public sealed class pnVaultAgeNode : pnVaultNodeAccess {
 
         public Guid Instance {
-            get { return fBase.fUuid[0]; }
-            set { fBase.fUuid[0] = value; }
+            get {
+                if (fBase.Uuid_1.HasValue)
+                    return fBase.Uuid_1.Value;
+                else
+                    return Guid.Empty;
+            }
+
+            set { fBase.Uuid_1 = value; }
         }
 
         public Guid ParentInstance {
-            get { return fBase.fUuid[1]; }
-            set { fBase.fUuid[1] = value; }
+            get {
+                if (fBase.Uuid_2.HasValue)
+                    return fBase.Uuid_2.Value;
+                else
+                    return Guid.Empty;
+            }
+
+            set { fBase.Uuid_2 = value; }
         }
 
         public string AgeName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public pnVaultAgeNode() : base(ENodeType.kNodeAge) { }
@@ -65,63 +77,111 @@ namespace Plasma {
     public sealed class pnVaultAgeInfoNode : pnVaultNodeAccess {
 
         public int SequenceNumber {
-            get { return fBase.fInt32[0].Value; }
-            set { fBase.fInt32[0] = value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return fBase.Int32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_1 = value; }
         }
 
         public bool Public {
-            get { return Convert.ToBoolean(fBase.fInt32[1]); }
-            set { fBase.fInt32[1] = Convert.ToInt32(value); }
+            get {
+                if (fBase.Int32_2.HasValue)
+                    return Convert.ToBoolean(fBase.Int32_2.Value);
+                else
+                    return false;
+            }
+
+            set { fBase.Int32_2 = Convert.ToInt32(value); }
         }
 
         public int Language {
-            get { return fBase.fInt32[2].Value; }
-            set { fBase.fInt32[2] = value; }
+            get {
+                if (fBase.Int32_3.HasValue)
+                    return fBase.Int32_3.Value;
+                else
+                    return -1; // Invalid language
+            }
+
+            set { fBase.Int32_3 = value; }
         }
 
         public uint AgeNodeID {
-            get { return fBase.fUInt32[0].Value; }
-            set { fBase.fUInt32[0] = value; }
+            get {
+                if (fBase.UInt32_1.HasValue)
+                    return fBase.UInt32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.UInt32_1 = value; }
         }
 
         public uint TsarID {
-            get { return fBase.fUInt32[1].Value; }
-            set { fBase.fUInt32[1] = value; }
+            get {
+                if (fBase.UInt32_2.HasValue)
+                    return fBase.UInt32_2.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.UInt32_2 = value; }
         }
 
         public uint Flags {
-            get { return fBase.fUInt32[2].Value; }
-            set { fBase.fUInt32[2] = value; }
+            get {
+                if (fBase.UInt32_3.HasValue)
+                    return fBase.UInt32_3.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.UInt32_3 = value; }
         }
 
-        public Guid InstanceUUID {
-            get { return fBase.fUuid[0]; }
-            set { fBase.fUuid[0] = value; }
+        public Guid InstanceUuid {
+            get {
+                if (fBase.Uuid_1.HasValue)
+                    return fBase.Uuid_1.Value;
+                else
+                    return Guid.Empty;
+            }
+
+            set { fBase.Uuid_1 = value; }
         }
 
-        public Guid ParentInstanceUUID {
-            get { return fBase.fUuid[1]; }
-            set { fBase.fUuid[1] = value; }
+        public Guid ParentInstanceUuid {
+            get {
+                if (fBase.Uuid_2.HasValue)
+                    return fBase.Uuid_2.Value;
+                else
+                    return Guid.Empty;
+            }
+
+            set { fBase.Uuid_2 = value; }
         }
 
         public string Filename {
-            get { return fBase.fString64[1]; }
-            set { fBase.fString64[1] = value; }
+            get { return fBase.String64_2; }
+            set { fBase.String64_2 = value; }
         }
 
         public string InstanceName {
-            get { return fBase.fString64[2]; }
-            set { fBase.fString64[2] = value; }
+            get { return fBase.String64_3; }
+            set { fBase.String64_3 = value; }
         }
 
         public string UserDefinedName {
-            get { return fBase.fString64[3]; }
-            set { fBase.fString64[3] = value; }
+            get { return fBase.String64_4; }
+            set { fBase.String64_4 = value; }
         }
 
         public string Description {
-            get { return fBase.fText[0]; }
-            set { fBase.fText[0] = value; }
+            get { return fBase.Text_1; }
+            set { fBase.Text_1 = value; }
         }
 
         public pnVaultAgeInfoNode() : base(ENodeType.kNodeAgeInfo) { }
@@ -131,18 +191,30 @@ namespace Plasma {
     public sealed class pnVaultAgeLinkNode : pnVaultNodeAccess {
 
         public bool Unlocked {
-            get { return Convert.ToBoolean(fBase.fInt32[0]); }
-            set { fBase.fInt32[0] = Convert.ToInt32(value); }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return Convert.ToBoolean(fBase.Int32_1.Value);
+                else
+                    return false;
+            }
+
+            set { fBase.Int32_1 = Convert.ToInt32(value); }
         }
 
         public bool Volatile {
-            get { return Convert.ToBoolean(fBase.fInt32[1]); }
-            set { fBase.fInt32[1] = Convert.ToInt32(value); }
+            get {
+                if (fBase.Int32_2.HasValue)
+                    return Convert.ToBoolean(fBase.Int32_2.Value);
+                else
+                    return false;
+            }
+
+            set { fBase.Int32_2 = Convert.ToInt32(value); }
         }
 
         public string SpawnPoints {
-            get { return Encoding.UTF8.GetString(fBase.fBlob[0]); }
-            set { fBase.fBlob[0] = Encoding.UTF8.GetBytes(value); }
+            get { return Encoding.UTF8.GetString(fBase.Blob_1); }
+            set { fBase.Blob_1 = Encoding.UTF8.GetBytes(value); }
         }
 
         public pnVaultAgeLinkNode() : base(ENodeType.kNodeAgeLink) { }
@@ -152,18 +224,24 @@ namespace Plasma {
     public sealed class pnVaultChronicleNode : pnVaultNodeAccess {
 
         public int EntryType {
-            get { return fBase.fInt32[0].Value; }
-            set { fBase.fInt32[0] = value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return fBase.Int32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_1 = value; }
         }
 
         public string EntryName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public string EntryValue {
-            get { return fBase.fText[0]; }
-            set { fBase.fText[0] = value; }
+            get { return fBase.Text_1; }
+            set { fBase.Text_1 = value; }
         }
 
         public pnVaultChronicleNode() : base(ENodeType.kNodeChronicle) { }
@@ -173,13 +251,19 @@ namespace Plasma {
     public class pnVaultFolderNode : pnVaultNodeAccess {
 
         public EStandardNode FolderType {
-            get { return (EStandardNode)fBase.fInt32[0]; }
-            set { fBase.fInt32[0] = (int)value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return (EStandardNode)fBase.Int32_1.Value;
+                else
+                    return EStandardNode.kUserDefinedNode;
+            }
+
+            set { fBase.Int32_1 = (int)value; }
         }
 
         public string FolderName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public pnVaultFolderNode() : base(ENodeType.kNodeFolder) { }
@@ -201,18 +285,40 @@ namespace Plasma {
         public enum ImgType { kNone, kJPEG }
 
         public ImgType ImageType {
-            get { return (ImgType)fBase.fInt32[0]; }
-            set { fBase.fInt32[0] = (int)value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return (ImgType)fBase.Int32_1.Value;
+                else
+                    return ImgType.kNone;
+            }
+
+            set { fBase.Int32_1 = (int)value; }
         }
 
         public string ImageName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public byte[] ImageData {
-            get { return fBase.fBlob[0]; }
-            set { fBase.fBlob[0] = value; }
+            get {
+                // Extra 4 byte length :(
+                byte[] eapSucks = new byte[fBase.Blob_1.Length - 4];
+                Buffer.BlockCopy(fBase.Blob_1, 4, eapSucks, 0, eapSucks.Length);
+                return eapSucks;
+            }
+            
+            set {
+                if (value == null)
+                    fBase.Blob_1 = null;
+                else {
+                    // Prepend the 4 byte length :(
+                    byte[] eapSucks = new byte[value.Length + 4];
+                    Buffer.BlockCopy(BitConverter.GetBytes(eapSucks.Length), 0, eapSucks, 0, 4);
+                    Buffer.BlockCopy(value, 0, eapSucks, 4, value.Length);
+                    fBase.Blob_1 = eapSucks;
+                }
+            }
         }
 
         public pnVaultImageNode() : base(ENodeType.kNodeImage) { }
@@ -221,19 +327,32 @@ namespace Plasma {
 
     public sealed class pnVaultMarkerListNode : pnVaultNodeAccess {
 
+        // TODO: Find/Create an enum for me?
         public int GameType {
-            get { return fBase.fInt32[0].Value; }
-            set { fBase.fInt32[0] = value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return fBase.Int32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_1 = value; }
         }
 
         public int RoundLength {
-            get { return fBase.fInt32[1].Value; }
-            set { fBase.fInt32[1] = value; }
+            get {
+                if (fBase.Int32_2.HasValue)
+                    return fBase.Int32_2.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_2 = value; }
         }
 
         public string OwnerName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public pnVaultMarkerListNode() : base(ENodeType.kNodeMarkerList) { }
@@ -248,38 +367,74 @@ namespace Plasma {
         }
 
         public int Torans {
-            get { return fBase.fInt32[0].Value; }
-            set { fBase.fInt32[0] = value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return fBase.Int32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_1 = value; }
         }
 
         public int HSpans {
-            get { return fBase.fInt32[1].Value; }
-            set { fBase.fInt32[1] = value; }
+            get {
+                if (fBase.Int32_2.HasValue)
+                    return fBase.Int32_2.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_2 = value; }
         }
 
         public int VSpans {
-            get { return fBase.fInt32[2].Value; }
-            set { fBase.fInt32[2] = value; }
+            get {
+                if (fBase.Int32_3.HasValue)
+                    return fBase.Int32_3.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_3 = value; }
         }
 
         public uint PosX {
-            get { return fBase.fUInt32[0].Value; }
-            set { fBase.fUInt32[0] = value; }
+            get {
+                if (fBase.UInt32_1.HasValue)
+                    return fBase.UInt32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.UInt32_1 = value; }
         }
 
         public uint PosY {
-            get { return fBase.fUInt32[1].Value; }
-            set { fBase.fUInt32[1] = value; }
+            get {
+                if (fBase.UInt32_2.HasValue)
+                    return fBase.UInt32_2.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.UInt32_2 = value; }
         }
 
         public uint PosZ {
-            get { return fBase.fUInt32[2].Value; }
-            set { fBase.fUInt32[2] = value; }
+            get {
+                if (fBase.UInt32_3.HasValue)
+                    return fBase.UInt32_3.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.UInt32_3 = value; }
         }
 
         public string MarkerText {
-            get { return fBase.fText[0]; }
-            set { fBase.fText[0] = value; }
+            get { return fBase.Text_1; }
+            set { fBase.Text_1 = value; }
         }
 
         public pnVaultMarkerNode() : base(ENodeType.kNodeMarker) { }
@@ -289,28 +444,46 @@ namespace Plasma {
     public sealed class pnVaultPlayerInfoNode : pnVaultNodeAccess {
 
         public bool Online {
-            get { return Convert.ToBoolean(fBase.fInt32[0]); }
-            set { fBase.fInt32[0] = Convert.ToInt32(value); }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return Convert.ToBoolean(fBase.Int32_1.Value);
+                else
+                    return false;
+            }
+
+            set { fBase.Int32_1 = Convert.ToInt32(value); }
         }
 
         public uint PlayerID {
-            get { return fBase.fUInt32[0].Value; }
-            set { fBase.fUInt32[0] = value; }
+            get {
+                if (fBase.UInt32_1.HasValue)
+                    return fBase.UInt32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.UInt32_1 = value; }
         }
 
-        public Guid AgeInstanceUUID {
-            get { return fBase.fUuid[0]; }
-            set { fBase.fUuid[0] = value; }
+        public Guid AgeInstanceUuid {
+            get {
+                if (fBase.Uuid_1.HasValue)
+                    return fBase.Uuid_1.Value;
+                else
+                    return Guid.Empty;
+            }
+
+            set { fBase.Uuid_1 = value; }
         }
 
         public string AgeInstanceName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public string PlayerName {
-            get { return fBase.fIString64[0]; }
-            set { fBase.fIString64[0] = value; }
+            get { return fBase.IString64_1; }
+            set { fBase.IString64_1 = value; }
         }
 
         public pnVaultPlayerInfoNode() : base(ENodeType.kNodePlayerInfo) { }
@@ -320,33 +493,57 @@ namespace Plasma {
     public sealed class pnVaultPlayerNode : pnVaultNodeAccess {
 
         public bool Banned {
-            get { return Convert.ToBoolean(fBase.fInt32[0]); }
-            set { fBase.fInt32[0] = Convert.ToInt32(value); }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return Convert.ToBoolean(fBase.Int32_1.Value);
+                else
+                    return false;
+            }
+
+            set { fBase.Int32_1 = Convert.ToInt32(value); }
         }
 
         public bool Explorer {
-            get { return Convert.ToBoolean(fBase.fInt32[1]); }
-            set { fBase.fInt32[1] = Convert.ToInt32(value); }
+            get {
+                if (fBase.Int32_2.HasValue)
+                    return Convert.ToBoolean(fBase.Int32_2.Value);
+                else
+                    return false;
+            }
+
+            set { fBase.Int32_2 = Convert.ToInt32(value); }
         }
 
         public TimeSpan OnlineTime {
-            get { return TimeSpan.FromSeconds((double)fBase.fUInt32[0]); }
-            set { fBase.fUInt32[0] = (uint)value.TotalSeconds; }
+            get {
+                if (fBase.UInt32_1.HasValue)
+                    return TimeSpan.FromSeconds((double)fBase.UInt32_1);
+                else
+                    return TimeSpan.FromSeconds(0.0d);
+            }
+
+            set { fBase.UInt32_1 = (uint)value.Seconds; }
         }
 
-        public Guid AccountUUID {
-            get { return fBase.fUuid[0]; }
-            set { fBase.fUuid[0] = value; }
+        public Guid AccountUuid {
+            get {
+                if (fBase.Uuid_1.HasValue)
+                    return fBase.Uuid_1.Value;
+                else
+                    return Guid.Empty;
+            }
+
+            set { fBase.Uuid_1 = value; }
         }
 
         public string AvatarShape {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public string PlayerName {
-            get { return fBase.fIString64[0]; }
-            set { fBase.fIString64[0] = value; }
+            get { return fBase.IString64_1; }
+            set { fBase.IString64_1 = value; }
         }
 
         public pnVaultPlayerNode() : base(ENodeType.kNodePlayer) { }
@@ -356,20 +553,20 @@ namespace Plasma {
     public sealed class pnVaultSDLNode : pnVaultNodeAccess {
 
         public int StateIdent {
-            get { return fBase.fInt32[0].Value; }
-            set { fBase.fInt32[0] = value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return fBase.Int32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_1 = value; }
         }
 
         public string StateName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
-
-        /*
-         * public StateDataRecord StateData {
-         * 
-         * }
-         */
 
         public pnVaultSDLNode() : base(ENodeType.kNodeSDL) { }
         public pnVaultSDLNode(pnVaultNode node) : base(node) { }
@@ -378,8 +575,14 @@ namespace Plasma {
     public sealed class pnVaultSystemNode : pnVaultNodeAccess {
 
         public int CCRStatus {
-            get { return fBase.fInt32[0].Value; }
-            set { fBase.fInt32[0] = value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return fBase.Int32_1.Value;
+                else
+                    return 0;
+            }
+
+            set { fBase.Int32_1 = value; }
         }
 
         public pnVaultSystemNode() : base(ENodeType.kNodeSystem) { }
@@ -389,23 +592,35 @@ namespace Plasma {
     public sealed class pnVaultTextNode : pnVaultNodeAccess {
 
         public ENoteType NodeType {
-            get { return (ENoteType)fBase.fInt32[0]; }
-            set { fBase.fInt32[0] = (int)value; }
+            get {
+                if (fBase.Int32_1.HasValue)
+                    return (ENoteType)fBase.Int32_1.Value;
+                else
+                    return ENoteType.kNoteGeneric;
+            }
+
+            set { fBase.Int32_1 = (int)value; }
         }
 
         public ENoteType NodeSubType {
-            get { return (ENoteType)fBase.fInt32[1]; }
-            set { fBase.fInt32[1] = (int)value; }
+            get {
+                if (fBase.Int32_2.HasValue)
+                    return (ENoteType)fBase.Int32_2.Value;
+                else
+                    return ENoteType.kNoteGeneric;
+            }
+
+            set { fBase.Int32_2 = (int)value; }
         }
 
         public string NoteName {
-            get { return fBase.fString64[0]; }
-            set { fBase.fString64[0] = value; }
+            get { return fBase.String64_1; }
+            set { fBase.String64_1 = value; }
         }
 
         public string Text {
-            get { return fBase.fText[0]; }
-            set { fBase.fText[0] = value; }
+            get { return fBase.Text_1; }
+            set { fBase.Text_1 = value; }
         }
 
         public pnVaultTextNode() : base(ENodeType.kNodeTextNote) { }
