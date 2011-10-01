@@ -56,9 +56,33 @@ namespace Plasma {
             }
         }
 
+        public void FetchNode(uint nodeID, pnCallback cb = null) {
+            pnCli2Vault_NodeFetch req = new pnCli2Vault_NodeFetch();
+            req.fNodeID = nodeID;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
         public void FetchNodeRefs(uint nodeID, pnCallback cb = null) {
             pnCli2Vault_FetchNodeRefs req = new pnCli2Vault_FetchNodeRefs();
             req.fNodeID = nodeID;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
+        public void FindNode(pnVaultNode pattern, pnCallback cb = null) {
+            pnCli2Vault_NodeFind req = new pnCli2Vault_NodeFind();
+            req.fPattern = pattern;
             req.fTransID = GetTransID();
 
             lock (fStream) {
@@ -102,8 +126,14 @@ namespace Plasma {
                         case pnVault2Cli.kVault2Cli_AcctLoginReply:
                             ILoggedIn();
                             break;
+                        case pnVault2Cli.kVault2Cli_NodeFetched:
+                            INodeFetched();
+                            break;
                         case pnVault2Cli.kVault2Cli_NodeRefsFetched:
                             INodeRefsFetched();
+                            break;
+                        case pnVault2Cli.kVault2Cli_NodeFindReply:
+                            INodeFound();
                             break;
                         case pnVault2Cli.kVault2Cli_PingReply:
                             IPingPong();
@@ -139,6 +169,18 @@ namespace Plasma {
             FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fAcctGuid, reply.fPermissions, reply.fAvatars, null });
         }
 
+        private void INodeFetched() {
+            pnVault2Cli_NodeFetched reply = new pnVault2Cli_NodeFetched();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fNode, null });
+        }
+
+        private void INodeFound() {
+            pnVault2Cli_NodeFindReply reply = new pnVault2Cli_NodeFindReply();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fNodeIDs, null });
+        }
+
         private void INodeRefsFetched() {
             pnVault2Cli_NodeRefsFetched reply = new pnVault2Cli_NodeRefsFetched();
             reply.Read(fStream);
@@ -165,7 +207,9 @@ namespace Plasma {
     }
 
     public delegate void pnVaultAcctLoggedIn(ENetError result, Guid guid, int perms, pnVaultAvatarInfo[] avatars, object param);
+    public delegate void pnVaultNodeFetched(ENetError result, pnVaultNode node, object param);
     public delegate void pnVaultNodeRefsFetched(ENetError result, pnVaultNodeRef[] refs, object param);
+    public delegate void pnVaultNodeFound(ENetError result, uint[] nodeIDs, object param);
     public delegate void pnVaultPlayerCreated(ENetError result, uint playerID, string playerName, string shape, object param);
     public delegate void pnVaultPlayerSet(ENetError result, object param);
     public delegate void pnVaultPong(uint pingTimeMs, byte[] payload, object param);

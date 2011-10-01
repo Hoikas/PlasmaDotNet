@@ -82,8 +82,67 @@ namespace Plasma {
         }
     }
 
-    public class pnVault2Cli_NodeRefsFetched : plNetStruct {
+    public class pnVault2Cli_NodeFetched : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+        public pnVaultNode fNode;
 
+        protected override object MsgID {
+            get { return (ushort)pnVault2Cli.kVault2Cli_NodeFetched; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+
+            // I'm not eap, so just embed the vault node into the stream
+            // Forget crazy buffer hacks.
+            if (s.ReadBool()) {
+                fNode = new pnVaultNode();
+                fNode.Read(s);
+            }
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            s.WriteBool(fNode != null);
+            if (fNode != null)
+                fNode.Write(s);
+        }
+    }
+
+    public class pnVault2Cli_NodeFindReply : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+        public uint[] fNodeIDs;
+
+        protected override object MsgID {
+            get { return (ushort)pnVault2Cli.kVault2Cli_NodeFindReply; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+            fNodeIDs = new uint[s.ReadInt()];
+            for (int i = 0; i < fNodeIDs.Length; i++)
+                fNodeIDs[i] = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            if (fNodeIDs == null)
+                s.WriteInt(0);
+            else {
+                s.WriteInt(fNodeIDs.Length);
+                for (int i = 0; i < fNodeIDs.Length; i++)
+                    s.WriteUInt(fNodeIDs[i]);
+            }
+        }
+    }
+
+    public class pnVault2Cli_NodeRefsFetched : plNetStruct {
         public uint fTransID;
         public ENetError fResult;
         public pnVaultNodeRef[] fNodeRefs;
@@ -96,8 +155,10 @@ namespace Plasma {
             fTransID = s.ReadUInt();
             fResult = (ENetError)s.ReadInt();
             fNodeRefs = new pnVaultNodeRef[s.ReadInt()];
-            for (int i = 0; i < fNodeRefs.Length; i++)
+            for (int i = 0; i < fNodeRefs.Length; i++) {
+                fNodeRefs[i] = new pnVaultNodeRef();
                 fNodeRefs[i].Read(s);
+            }
         }
 
         public override void Write(hsStream s) {

@@ -7,12 +7,6 @@ using System.Text;
 namespace Plasma {
     public partial class pnVaultSession {
 
-        // The vault server enforces basic security for session that come from the auth server
-        // Note that this security is BASIC and can be completely destroyed by giving out the
-        // vault keys! We do not enforce logins (unlike the auth server) because other servers will
-        // connect to us, so we need to let them do anything. In short: DON'T GIVE OUT THE VAULT KEYS.
-        uint fPlayerID = 0;
-
         private void IAcctLogin() {
             pnCli2Vault_AcctLoginRequest req = new pnCli2Vault_AcctLoginRequest();
             req.Read(fStream);
@@ -119,9 +113,9 @@ namespace Plasma {
 
             // Prepare the core node
             pnVaultPlayerNode player = new pnVaultPlayerNode();
-            player.AccountUUID = req.fAcctGuid;
+            player.AccountUuid = req.fAcctGuid;
             player.AvatarShape = req.fShape;
-            player.CreatorUUID = req.fAcctGuid;
+            player.CreatorUuid = req.fAcctGuid;
             player.PlayerName = req.fPlayerName;
 
             // Go ahead and insert this node.
@@ -138,7 +132,7 @@ namespace Plasma {
             // Player Info
             pnVaultPlayerInfoNode info = new pnVaultPlayerInfoNode();
             info.CreatorID = player.NodeID;
-            info.CreatorUUID = req.fAcctGuid;
+            info.CreatorUuid = req.fAcctGuid;
             info.PlayerID = player.NodeID;
             info.PlayerName = req.fPlayerName;
 
@@ -264,13 +258,10 @@ namespace Plasma {
                     selPlayer.Table = "Players"; ;
 
                     IDataReader rPlayer = selPlayer.Execute(fDb);
-                    if (rPlayer.Read()) {
+                    if (rPlayer.Read())
                         reply.fResult = ENetError.kNetSuccess;
-
-                        // Cache the PlayerID for basic security if this is not a CCR/Admin
-                        if (perms < (int)pnAcctPerms.CCR)
-                            fPlayerID = req.fPlayerID;
-                    } else reply.fResult = ENetError.kNetErrPlayerNotFound;
+                    else 
+                        reply.fResult = ENetError.kNetErrPlayerNotFound;
                     rPlayer.Close();
                 } else {
                     reply.fResult = ENetError.kNetErrPlayerNotFound;

@@ -306,7 +306,7 @@ namespace Plasma {
         #endregion
 
         /// <summary>
-        /// Gets the value of the specified field of this vault node
+        /// Gets or sets the value of the specified field of this vault node
         /// </summary>
         /// <param name="field">The vault field requested</param>
         /// <returns>The value of the field</returns>
@@ -315,105 +315,105 @@ namespace Plasma {
         public object this[pnVaultNodeFields field] {
             get {
                 switch (field) {
-                    case pnVaultNodeFields.kBlob_1:
+                    case pnVaultNodeFields.Blob_1:
                         return fBlob[0];
-                    case pnVaultNodeFields.kBlob_2:
+                    case pnVaultNodeFields.Blob_2:
                         return fBlob[1];
-                    case pnVaultNodeFields.kCreateAgeName:
+                    case pnVaultNodeFields.CreateAgeName:
                         return fCreateAgeName;
-                    case pnVaultNodeFields.kCreateAgeUuid:
+                    case pnVaultNodeFields.CreateAgeUuid:
                         if (fCreateAgeGuid.HasValue)
                             return fCreateAgeGuid.Value;
                         break;
-                    case pnVaultNodeFields.kCreateTime:
+                    case pnVaultNodeFields.CreateTime:
                         if (fCreateTime.HasValue)
                             return fCreateTime;
                         break;
-                    case pnVaultNodeFields.kCreatorIdx:
+                    case pnVaultNodeFields.CreatorIdx:
                         if (fCreatorID.HasValue)
                             return fCreatorID.Value;
                         break;
-                    case pnVaultNodeFields.kCreatorUuid:
+                    case pnVaultNodeFields.CreatorUuid:
                         if (fCreatorGuid.HasValue)
                             return fCreatorGuid.Value;
                         break;
-                    case pnVaultNodeFields.kInt32_1:
+                    case pnVaultNodeFields.Int32_1:
                         if (fInt32[0].HasValue)
                             return fInt32[0];
                         break;
-                    case pnVaultNodeFields.kInt32_2:
+                    case pnVaultNodeFields.Int32_2:
                         if (fInt32[1].HasValue)
                             return fInt32[1];
                         break;
-                    case pnVaultNodeFields.kInt32_3:
+                    case pnVaultNodeFields.Int32_3:
                         if (fInt32[2].HasValue)
                             return fInt32[2];
                         break;
-                    case pnVaultNodeFields.kInt32_4:
+                    case pnVaultNodeFields.Int32_4:
                         if (fInt32[3].HasValue)
                             return fInt32[3];
                         break;
-                    case pnVaultNodeFields.kIString64_1:
+                    case pnVaultNodeFields.IString64_1:
                         return fIString64[0];
-                    case pnVaultNodeFields.kIString64_2:
+                    case pnVaultNodeFields.IString64_2:
                         return fIString64[1];
-                    case pnVaultNodeFields.kModifyTime:
+                    case pnVaultNodeFields.ModifyTime:
                         if (fModifyTime.HasValue)
                             return fModifyTime.Value;
                         break;
-                    case pnVaultNodeFields.kNodeIdx:
+                    case pnVaultNodeFields.NodeIdx:
                         if (fNodeID.HasValue)
                             return fNodeID;
                         break;
-                    case pnVaultNodeFields.kNodeType:
+                    case pnVaultNodeFields.NodeType:
                         // Returning this as an integer makes the most sense for the
                         // intended use case. (That being constructing SQL queries)
                         return (int)fNodeType;
-                    case pnVaultNodeFields.kString64_1:
+                    case pnVaultNodeFields.String64_1:
                         return fString64[0];
-                    case pnVaultNodeFields.kString64_2:
+                    case pnVaultNodeFields.String64_2:
                         return fString64[1];
-                    case pnVaultNodeFields.kString64_3:
+                    case pnVaultNodeFields.String64_3:
                         return fString64[2];
-                    case pnVaultNodeFields.kString64_4:
+                    case pnVaultNodeFields.String64_4:
                         return fString64[3];
-                    case pnVaultNodeFields.kString64_5:
+                    case pnVaultNodeFields.String64_5:
                         return fString64[4];
-                    case pnVaultNodeFields.kString64_6:
+                    case pnVaultNodeFields.String64_6:
                         return fString64[5];
-                    case pnVaultNodeFields.kText_1:
+                    case pnVaultNodeFields.Text_1:
                         return fText[0];
-                    case pnVaultNodeFields.kText_2:
+                    case pnVaultNodeFields.Text_2:
                         return fText[1];
-                    case pnVaultNodeFields.kUInt32_1:
+                    case pnVaultNodeFields.UInt32_1:
                         if (fUInt32[0].HasValue)
                             return fUInt32[0];
                         break;
-                    case pnVaultNodeFields.kUInt32_2:
+                    case pnVaultNodeFields.UInt32_2:
                         if (fUInt32[1].HasValue)
                             return fUInt32[1];
                         break;
-                    case pnVaultNodeFields.kUInt32_3:
+                    case pnVaultNodeFields.UInt32_3:
                         if (fUInt32[2].HasValue)
                             return fUInt32[2];
                         break;
-                    case pnVaultNodeFields.kUInt32_4:
+                    case pnVaultNodeFields.UInt32_4:
                         if (fUInt32[3].HasValue)
                             return fInt32[3];
                         break;
-                    case pnVaultNodeFields.kUuid_1:
+                    case pnVaultNodeFields.Uuid_1:
                         if (fGuid[0].HasValue)
                             return fGuid[0];
                         break;
-                    case pnVaultNodeFields.kUuid_2:
+                    case pnVaultNodeFields.Uuid_2:
                         if (fGuid[1].HasValue)
                             return fGuid[1];
                         break;
-                    case pnVaultNodeFields.kUuid_3:
+                    case pnVaultNodeFields.Uuid_3:
                         if (fGuid[2].HasValue)
                             return fGuid[2];
                         break;
-                    case pnVaultNodeFields.kUuid_4:
+                    case pnVaultNodeFields.Uuid_4:
                         if (fGuid[3].HasValue)
                             return fInt32[3];
                         break;
@@ -422,6 +422,109 @@ namespace Plasma {
                 // If we're still here, then we must have been asked for an unused field...
                 // We'll call that NULL :)
                 return null;
+            }
+
+            set {
+                // We'll be using the public setters here because they often implement some
+                // useful validation and/or sanity checks that we don't want to bypass.
+                switch (field) {
+                    case pnVaultNodeFields.Blob_1:
+                        Blob_1 = (byte[])value;
+                        break;
+                    case pnVaultNodeFields.Blob_2:
+                        Blob_2 = (byte[])value;
+                        break;
+                    case pnVaultNodeFields.CreateAgeName:
+                        CreateAgeName = value.ToString();
+                        break;
+                    case pnVaultNodeFields.CreateAgeUuid:
+                        CreateAgeUuid = (Guid)value;
+                        break;
+                    case pnVaultNodeFields.CreateTime:
+                        CreateTime = (DateTime)value;
+                        break;
+                    case pnVaultNodeFields.CreatorIdx:
+                        CreatorID = (uint)value;
+                        break;
+                    case pnVaultNodeFields.CreatorUuid:
+                        CreatorUuid = (Guid)value;
+                        break;
+                    case pnVaultNodeFields.Int32_1:
+                        Int32_1 = (int)value;
+                        break;
+                    case pnVaultNodeFields.Int32_2:
+                        Int32_2 = (int)value;
+                        break;
+                    case pnVaultNodeFields.Int32_3:
+                        Int32_3 = (int)value;
+                        break;
+                    case pnVaultNodeFields.Int32_4:
+                        Int32_4 = (int)value;
+                        break;
+                    case pnVaultNodeFields.IString64_1:
+                        IString64_1 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.IString64_2:
+                        IString64_2 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.ModifyTime:
+                        ModifyTime = (DateTime)value;
+                        break;
+                    case pnVaultNodeFields.NodeIdx:
+                        NodeID = (uint)value;
+                        break;
+                    case pnVaultNodeFields.NodeType:
+                        NodeType = (ENodeType)Convert.ToInt32(value);
+                        break;
+                    case pnVaultNodeFields.String64_1:
+                        String64_1 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.String64_2:
+                        String64_2 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.String64_3:
+                        String64_3 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.String64_4:
+                        String64_4 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.String64_5:
+                        String64_5 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.String64_6:
+                        String64_6 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.Text_1:
+                        Text_1 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.Text_2:
+                        Text_2 = value.ToString();
+                        break;
+                    case pnVaultNodeFields.UInt32_1:
+                        UInt32_1 = (uint)value;
+                        break;
+                    case pnVaultNodeFields.UInt32_2:
+                        UInt32_2 = (uint)value;
+                        break;
+                    case pnVaultNodeFields.UInt32_3:
+                        UInt32_3 = (uint)value;
+                        break;
+                    case pnVaultNodeFields.UInt32_4:
+                        UInt32_4 = (uint)value;
+                        break;
+                    case pnVaultNodeFields.Uuid_1:
+                        Uuid_1 = (Guid)value;
+                        break;
+                    case pnVaultNodeFields.Uuid_2:
+                        Uuid_2 = (Guid)value;
+                        break;
+                    case pnVaultNodeFields.Uuid_3:
+                        Uuid_3 = (Guid)value;
+                        break;
+                    case pnVaultNodeFields.Uuid_4:
+                        Uuid_4 = (Guid)value;
+                        break;
+                }
             }
         }
 
@@ -432,69 +535,69 @@ namespace Plasma {
             get {
                 pnVaultNodeFields f = (pnVaultNodeFields)0;
                 if (fNodeID.HasValue)
-                    f |= pnVaultNodeFields.kNodeIdx;
+                    f |= pnVaultNodeFields.NodeIdx;
                 if (fCreateTime.HasValue)
-                    f |= pnVaultNodeFields.kCreateTime;
+                    f |= pnVaultNodeFields.CreateTime;
                 if (fCreateAgeName != null)
-                    f |= pnVaultNodeFields.kCreateAgeName;
+                    f |= pnVaultNodeFields.CreateAgeName;
                 if (fCreateAgeGuid.HasValue)
-                    f |= pnVaultNodeFields.kCreateAgeUuid;
+                    f |= pnVaultNodeFields.CreateAgeUuid;
                 if (fCreatorID.HasValue)
-                    f |= pnVaultNodeFields.kCreatorIdx;
+                    f |= pnVaultNodeFields.CreatorIdx;
                 if (fCreatorGuid.HasValue)
-                    f |= pnVaultNodeFields.kCreatorUuid;
+                    f |= pnVaultNodeFields.CreatorUuid;
                 if (fNodeType != ENodeType.kNodeInvalid)
-                    f |= pnVaultNodeFields.kNodeType;
+                    f |= pnVaultNodeFields.NodeType;
                 if (fInt32[0].HasValue)
-                    f |= pnVaultNodeFields.kInt32_1;
+                    f |= pnVaultNodeFields.Int32_1;
                 if (fInt32[1].HasValue)
-                    f |= pnVaultNodeFields.kInt32_2;
+                    f |= pnVaultNodeFields.Int32_2;
                 if (fInt32[2].HasValue)
-                    f |= pnVaultNodeFields.kInt32_3;
+                    f |= pnVaultNodeFields.Int32_3;
                 if (fInt32[3].HasValue)
-                    f |= pnVaultNodeFields.kInt32_4;
+                    f |= pnVaultNodeFields.Int32_4;
                 if (fUInt32[0].HasValue)
-                    f |= pnVaultNodeFields.kUInt32_1;
+                    f |= pnVaultNodeFields.UInt32_1;
                 if (fUInt32[1].HasValue)
-                    f |= pnVaultNodeFields.kUInt32_2;
+                    f |= pnVaultNodeFields.UInt32_2;
                 if (fUInt32[2].HasValue)
-                    f |= pnVaultNodeFields.kUInt32_3;
+                    f |= pnVaultNodeFields.UInt32_3;
                 if (fUInt32[3].HasValue)
-                    f |= pnVaultNodeFields.kUInt32_4;
+                    f |= pnVaultNodeFields.UInt32_4;
                 if (fGuid[0].HasValue)
-                    f |= pnVaultNodeFields.kUuid_1;
+                    f |= pnVaultNodeFields.Uuid_1;
                 if (fGuid[1].HasValue)
-                    f |= pnVaultNodeFields.kUuid_2;
+                    f |= pnVaultNodeFields.Uuid_2;
                 if (fGuid[2].HasValue)
-                    f |= pnVaultNodeFields.kUuid_3;
+                    f |= pnVaultNodeFields.Uuid_3;
                 if (fGuid[3].HasValue)
-                    f |= pnVaultNodeFields.kUuid_4;
+                    f |= pnVaultNodeFields.Uuid_4;
                 if (fString64[0] != null)
-                    f |= pnVaultNodeFields.kString64_1;
+                    f |= pnVaultNodeFields.String64_1;
                 if (fString64[1] != null)
-                    f |= pnVaultNodeFields.kString64_2;
+                    f |= pnVaultNodeFields.String64_2;
                 if (fString64[2] != null)
-                    f |= pnVaultNodeFields.kString64_3;
+                    f |= pnVaultNodeFields.String64_3;
                 if (fString64[3] != null)
-                    f |= pnVaultNodeFields.kString64_4;
+                    f |= pnVaultNodeFields.String64_4;
                 if (fString64[4] != null)
-                    f |= pnVaultNodeFields.kString64_5;
+                    f |= pnVaultNodeFields.String64_5;
                 if (fString64[5] != null)
-                    f |= pnVaultNodeFields.kString64_6;
+                    f |= pnVaultNodeFields.String64_6;
                 if (fIString64[0] != null)
-                    f |= pnVaultNodeFields.kIString64_1;
+                    f |= pnVaultNodeFields.IString64_1;
                 if (fIString64[1] != null)
-                    f |= pnVaultNodeFields.kIString64_2;
+                    f |= pnVaultNodeFields.IString64_2;
                 if (fText[0] != null)
-                    f |= pnVaultNodeFields.kText_1;
+                    f |= pnVaultNodeFields.Text_1;
                 if (fText[1] != null)
-                    f |= pnVaultNodeFields.kText_2;
+                    f |= pnVaultNodeFields.Text_2;
                 if (fBlob[0] != null)
                     if (fBlob[0].Length != 0)
-                        f |= pnVaultNodeFields.kBlob_1;
+                        f |= pnVaultNodeFields.Blob_1;
                 if (fBlob[1] != null)
                     if (fBlob[1].Length != 0)
-                        f |= pnVaultNodeFields.kBlob_2;
+                        f |= pnVaultNodeFields.Blob_2;
                 return f;
             }
         }
@@ -506,100 +609,100 @@ namespace Plasma {
             pnVaultNodeFields f = (pnVaultNodeFields)s.ReadULong();
             for (ulong bit = 1; bit != 0 && bit <= (ulong)f; bit <<= 1) {
                 switch (f & (pnVaultNodeFields)bit) {
-                    case pnVaultNodeFields.kBlob_1:
+                    case pnVaultNodeFields.Blob_1:
                         fBlob[0] = s.ReadBytes(s.ReadInt());
                         break;
-                    case pnVaultNodeFields.kBlob_2:
+                    case pnVaultNodeFields.Blob_2:
                         fBlob[1] = s.ReadBytes(s.ReadInt());
                         break;
-                    case pnVaultNodeFields.kCreateAgeName:
+                    case pnVaultNodeFields.CreateAgeName:
                         fCreateAgeName = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kCreateAgeUuid:
+                    case pnVaultNodeFields.CreateAgeUuid:
                         fCreateAgeGuid = pnHelpers.ReadUuid(s);
                         break;
-                    case pnVaultNodeFields.kCreateTime:
+                    case pnVaultNodeFields.CreateTime:
                         fCreateTime = plUnifiedTime.Epoch.AddSeconds((double)s.ReadInt());
                         break;
-                    case pnVaultNodeFields.kCreatorIdx:
+                    case pnVaultNodeFields.CreatorIdx:
                         fCreatorID = s.ReadUInt();
                         break;
-                    case pnVaultNodeFields.kCreatorUuid:
+                    case pnVaultNodeFields.CreatorUuid:
                         fCreatorGuid = pnHelpers.ReadUuid(s);
                         break;
-                    case pnVaultNodeFields.kInt32_1:
+                    case pnVaultNodeFields.Int32_1:
                         fInt32[0] = s.ReadInt();
                         break;
-                    case pnVaultNodeFields.kInt32_2:
+                    case pnVaultNodeFields.Int32_2:
                         fInt32[1] = s.ReadInt();
                         break;
-                    case pnVaultNodeFields.kInt32_3:
+                    case pnVaultNodeFields.Int32_3:
                         fInt32[2] = s.ReadInt();
                         break;
-                    case pnVaultNodeFields.kInt32_4:
+                    case pnVaultNodeFields.Int32_4:
                         fInt32[3] = s.ReadInt();
                         break;
-                    case pnVaultNodeFields.kIString64_1:
+                    case pnVaultNodeFields.IString64_1:
                         fIString64[0] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kIString64_2:
+                    case pnVaultNodeFields.IString64_2:
                         fIString64[1] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kModifyTime:
+                    case pnVaultNodeFields.ModifyTime:
                         fModifyTime = plUnifiedTime.Epoch.AddSeconds((double)s.ReadInt());
                         break;
-                    case pnVaultNodeFields.kNodeIdx:
+                    case pnVaultNodeFields.NodeIdx:
                         fNodeID = s.ReadUInt();
                         break;
-                    case pnVaultNodeFields.kNodeType:
+                    case pnVaultNodeFields.NodeType:
                         fNodeType = (ENodeType)s.ReadUInt();
                         break;
-                    case pnVaultNodeFields.kString64_1:
+                    case pnVaultNodeFields.String64_1:
                         fString64[0] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kString64_2:
+                    case pnVaultNodeFields.String64_2:
                         fString64[1] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kString64_3:
+                    case pnVaultNodeFields.String64_3:
                         fString64[2] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kString64_4:
+                    case pnVaultNodeFields.String64_4:
                         fString64[3] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kString64_5:
+                    case pnVaultNodeFields.String64_5:
                         fString64[4] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kString64_6:
+                    case pnVaultNodeFields.String64_6:
                         fString64[5] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kText_1:
+                    case pnVaultNodeFields.Text_1:
                         fText[0] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kText_2:
+                    case pnVaultNodeFields.Text_2:
                         fText[1] = pnHelpers.ReadString(s);
                         break;
-                    case pnVaultNodeFields.kUInt32_1:
+                    case pnVaultNodeFields.UInt32_1:
                         fUInt32[0] = s.ReadUInt();
                         break;
-                    case pnVaultNodeFields.kUInt32_2:
+                    case pnVaultNodeFields.UInt32_2:
                         fUInt32[1] = s.ReadUInt();
                         break;
-                    case pnVaultNodeFields.kUInt32_3:
+                    case pnVaultNodeFields.UInt32_3:
                         fUInt32[2] = s.ReadUInt();
                         break;
-                    case pnVaultNodeFields.kUInt32_4:
+                    case pnVaultNodeFields.UInt32_4:
                         fUInt32[3] = s.ReadUInt();
                         break;
-                    case pnVaultNodeFields.kUuid_1:
+                    case pnVaultNodeFields.Uuid_1:
                         fGuid[0] = pnHelpers.ReadUuid(s);
                         break;
-                    case pnVaultNodeFields.kUuid_2:
+                    case pnVaultNodeFields.Uuid_2:
                         fGuid[1] = pnHelpers.ReadUuid(s);
                         break;
-                    case pnVaultNodeFields.kUuid_3:
+                    case pnVaultNodeFields.Uuid_3:
                         fGuid[2] = pnHelpers.ReadUuid(s);
                         break;
-                    case pnVaultNodeFields.kUuid_4:
+                    case pnVaultNodeFields.Uuid_4:
                         fGuid[3] = pnHelpers.ReadUuid(s);
                         break;
                 }
@@ -608,106 +711,107 @@ namespace Plasma {
 
         public void Write(hsStream s) {
             pnVaultNodeFields f = Fields;
+            s.WriteULong((ulong)f);
             for (ulong bit = 1; bit != 0 && bit <= (ulong)f; bit <<= 1) {
                 switch (f & (pnVaultNodeFields)bit) {
-                    case pnVaultNodeFields.kBlob_1:
+                    case pnVaultNodeFields.Blob_1:
                         s.WriteInt(fBlob[0].Length);
                         s.WriteBytes(fBlob[0]);
                         break;
-                    case pnVaultNodeFields.kBlob_2:
+                    case pnVaultNodeFields.Blob_2:
                         s.WriteInt(fBlob[1].Length);
                         s.WriteBytes(fBlob[1]);
                         break;
-                    case pnVaultNodeFields.kCreateAgeName:
+                    case pnVaultNodeFields.CreateAgeName:
                         pnHelpers.WriteString(s, fCreateAgeName);
                         break;
-                    case pnVaultNodeFields.kCreateAgeUuid:
+                    case pnVaultNodeFields.CreateAgeUuid:
                         pnHelpers.WriteUuid(s, fCreateAgeGuid.Value);
                         break;
-                    case pnVaultNodeFields.kCreateTime:
+                    case pnVaultNodeFields.CreateTime:
                         TimeSpan cts = fCreateTime.Value - plUnifiedTime.Epoch;
                         s.WriteUInt((uint)cts.Seconds);
                         break;
-                    case pnVaultNodeFields.kCreatorIdx:
+                    case pnVaultNodeFields.CreatorIdx:
                         s.WriteUInt(fCreatorID.Value);
                         break;
-                    case pnVaultNodeFields.kCreatorUuid:
+                    case pnVaultNodeFields.CreatorUuid:
                         pnHelpers.WriteUuid(s, fCreatorGuid.Value);
                         break;
-                    case pnVaultNodeFields.kInt32_1:
+                    case pnVaultNodeFields.Int32_1:
                         s.WriteInt(fInt32[0].Value);
                         break;
-                    case pnVaultNodeFields.kInt32_2:
+                    case pnVaultNodeFields.Int32_2:
                         s.WriteInt(fInt32[1].Value);
                         break;
-                    case pnVaultNodeFields.kInt32_3:
+                    case pnVaultNodeFields.Int32_3:
                         s.WriteInt(fInt32[2].Value);
                         break;
-                    case pnVaultNodeFields.kInt32_4:
+                    case pnVaultNodeFields.Int32_4:
                         s.WriteInt(fInt32[3].Value);
                         break;
-                    case pnVaultNodeFields.kIString64_1:
+                    case pnVaultNodeFields.IString64_1:
                         pnHelpers.WriteString(s, fIString64[0]);
                         break;
-                    case pnVaultNodeFields.kIString64_2:
+                    case pnVaultNodeFields.IString64_2:
                         pnHelpers.WriteString(s, fIString64[1]);
                         break;
-                    case pnVaultNodeFields.kModifyTime:
+                    case pnVaultNodeFields.ModifyTime:
                         TimeSpan mts = fModifyTime.Value - plUnifiedTime.Epoch;
                         s.WriteUInt((uint)mts.Seconds);
                         break;
-                    case pnVaultNodeFields.kNodeIdx:
+                    case pnVaultNodeFields.NodeIdx:
                         s.WriteUInt(fNodeID.Value);
                         break;
-                    case pnVaultNodeFields.kNodeType:
+                    case pnVaultNodeFields.NodeType:
                         s.WriteUInt((uint)fNodeType);
                         break;
-                    case pnVaultNodeFields.kString64_1:
+                    case pnVaultNodeFields.String64_1:
                         pnHelpers.WriteString(s, fString64[0]);
                         break;
-                    case pnVaultNodeFields.kString64_2:
+                    case pnVaultNodeFields.String64_2:
                         pnHelpers.WriteString(s, fString64[1]);
                         break;
-                    case pnVaultNodeFields.kString64_3:
+                    case pnVaultNodeFields.String64_3:
                         pnHelpers.WriteString(s, fString64[2]);
                         break;
-                    case pnVaultNodeFields.kString64_4:
+                    case pnVaultNodeFields.String64_4:
                         pnHelpers.WriteString(s, fString64[3]);
                         break;
-                    case pnVaultNodeFields.kString64_5:
+                    case pnVaultNodeFields.String64_5:
                         pnHelpers.WriteString(s, fString64[4]);
                         break;
-                    case pnVaultNodeFields.kString64_6:
+                    case pnVaultNodeFields.String64_6:
                         pnHelpers.WriteString(s, fString64[5]);
                         break;
-                    case pnVaultNodeFields.kText_1:
+                    case pnVaultNodeFields.Text_1:
                         pnHelpers.WriteString(s, fText[0]);
                         break;
-                    case pnVaultNodeFields.kText_2:
+                    case pnVaultNodeFields.Text_2:
                         pnHelpers.WriteString(s, fText[1]);
                         break;
-                    case pnVaultNodeFields.kUInt32_1:
+                    case pnVaultNodeFields.UInt32_1:
                         s.WriteUInt(fUInt32[0].Value);
                         break;
-                    case pnVaultNodeFields.kUInt32_2:
+                    case pnVaultNodeFields.UInt32_2:
                         s.WriteUInt(fUInt32[1].Value);
                         break;
-                    case pnVaultNodeFields.kUInt32_3:
+                    case pnVaultNodeFields.UInt32_3:
                         s.WriteUInt(fUInt32[2].Value);
                         break;
-                    case pnVaultNodeFields.kUInt32_4:
+                    case pnVaultNodeFields.UInt32_4:
                         s.WriteUInt(fUInt32[3].Value);
                         break;
-                    case pnVaultNodeFields.kUuid_1:
+                    case pnVaultNodeFields.Uuid_1:
                         pnHelpers.WriteUuid(s, fGuid[0].Value);
                         break;
-                    case pnVaultNodeFields.kUuid_2:
+                    case pnVaultNodeFields.Uuid_2:
                         pnHelpers.WriteUuid(s, fGuid[1].Value);
                         break;
-                    case pnVaultNodeFields.kUuid_3:
+                    case pnVaultNodeFields.Uuid_3:
                         pnHelpers.WriteUuid(s, fGuid[2].Value);
                         break;
-                    case pnVaultNodeFields.kUuid_4:
+                    case pnVaultNodeFields.Uuid_4:
                         pnHelpers.WriteUuid(s, fGuid[3].Value);
                         break;
                 }
@@ -735,6 +839,13 @@ namespace Plasma {
         public uint fParent;
         public uint fChild;
         public uint fSaver;
+
+        public pnVaultNodeRef() { }
+        public pnVaultNodeRef(uint parent, uint child, uint saver) {
+            fParent = parent;
+            fChild = child;
+            fSaver = saver;
+        }
 
         public void Read(hsStream s) {
             fParent = s.ReadUInt();

@@ -55,8 +55,10 @@ namespace Plasma {
                     return new uint?();
             }
 
-            vna.CreatorID = cIdx;
-            vna.CreatorUUID = cGuid;
+            if (cIdx != 0)
+                vna.CreatorID = cIdx;
+            if (cGuid != Guid.Empty)
+                vna.CreatorUuid = cGuid;
 
             try {
                 ICreateNode(vna.BaseNode);
@@ -69,16 +71,36 @@ namespace Plasma {
         }
 
         private void ICreateNode(pnVaultNode node) {
-            // TODO: Filter out bad fields
             pnSqlInsertStatement insert = new pnSqlInsertStatement();
             pnVaultNodeFields allFields = node.Fields;
             for (ulong bit = 1; bit != 0 && bit <= (ulong)allFields; bit <<= 1) {
                 pnVaultNodeFields thisField = allFields & (pnVaultNodeFields)bit;
                 if ((int)thisField == 0) continue;
 
-                string colName = Enum.GetName(typeof(pnVaultNodeFields), thisField).Substring(1);
+                // Some basic sanity checks...
+                switch (thisField) {
+                    case pnVaultNodeFields.CreateTime:
+                        // I don't care what we were told, it was created NOW
+                        insert.AddValue("CreateTime", DateTime.UtcNow);
+                        continue;
+                    case pnVaultNodeFields.ModifyTime:
+                        // I don't care what we were told, it was last modified NOW
+                        insert.AddValue("ModifyTime", DateTime.UtcNow);
+                        continue;
+                    case pnVaultNodeFields.NodeIdx:
+                        // Impossible.
+                        continue;
+                }
+
+                string colName = thisField.ToString();
                 insert.AddValue(colName, node[thisField]);
             }
+
+            // We absolutely must have a correct Create/Modify time
+            if (node[pnVaultNodeFields.CreateTime] == null)
+                insert.AddValue("CreateTime", DateTime.UtcNow);
+            if (node[pnVaultNodeFields.ModifyTime] == null)
+                insert.AddValue("ModifyTime", DateTime.UtcNow);
 
             insert.Table = "Nodes";
             insert.Execute(fDb);
@@ -103,13 +125,13 @@ namespace Plasma {
 
         private uint[] IFindNode(pnVaultNode node) {
             pnSqlSelectStatement select = new pnSqlSelectStatement();
-            select.AddColumn("Idx");
+            select.AddColumn("NodeIdx");
             pnVaultNodeFields allFields = node.Fields;
             for (ulong bit = 1; bit != 0 && bit <= (ulong)allFields; bit <<= 1) {
                 pnVaultNodeFields thisField = allFields & (pnVaultNodeFields)bit;
                 if ((int)thisField == 0) continue;
 
-                string colName = Enum.GetName(typeof(pnVaultNodeFields), thisField).Substring(1);
+                string colName = thisField.ToString();
                 select.AddWhere(colName, node[thisField]);
             }
 
@@ -119,14 +141,24 @@ namespace Plasma {
             IDataReader r = select.Execute(fDb);
             List<uint> nodes = new List<uint>();
             while (r.Read())
-                nodes.Add((uint)r["Idx"]);
+                nodes.Add((uint)r["NodeIdx"]);
             r.Close();
 
             return nodes.ToArray();
         }
 
         private pnVaultNode IMakeNode(IDataReader r) {
-            throw new NotImplementedException();
+            pnVaultNodeFields[] fields = (pnVaultNodeFields[])Enum.GetValues(typeof(pnVaultNodeFields));
+            pnVaultNode node = new pnVaultNode();
+            foreach (pnVaultNodeFields f in fields) {
+                string name = f.ToString();
+                try {
+                    if (r[name] != null && r[name].ToString() != String.Empty)
+                        node[f] = r[name];
+                } catch { continue; }
+            }
+
+            return node;
         }
     }
 }

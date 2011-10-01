@@ -49,6 +49,68 @@ namespace Plasma {
         }
     }
 
+    public class pnCli2Vault_FetchNodeRefs : plNetStruct {
+        public uint fTransID;
+        public uint fNodeID;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Vault.kCli2Vault_FetchNodeRefs; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fNodeID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUInt(fNodeID);
+        }
+    }
+
+    public class pnCli2Vault_NodeFetch : plNetStruct {
+        public uint fTransID;
+        public uint fNodeID;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Vault.kCli2Vault_NodeFetch; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fNodeID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUInt(fNodeID);
+        }
+    }
+
+    public class pnCli2Vault_NodeFind : plNetStruct {
+        public uint fTransID;
+        public pnVaultNode fPattern;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Vault.kCli2Vault_NodeFind; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            if (s.ReadBool()) {
+                fPattern = new pnVaultNode();
+                fPattern.Read(s);
+            }
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteBool(fPattern != null);
+            if (fPattern != null)
+                fPattern.Write(s);
+        }
+    }
+
     public class pnCli2Vault_PingRequest : plNetStruct {
         public uint fTransID;
         public uint fPingTimeMs;
@@ -120,26 +182,6 @@ namespace Plasma {
             s.WriteUInt(fTransID);
             s.WriteUInt(fPlayerID);
             pnHelpers.WriteUuid(s, fAcctGuid);
-        }
-    }
-
-    public class pnCli2Vault_FetchNodeRefs : plNetStruct {
-
-        public uint fTransID;
-        public uint fNodeID;
-
-        protected override object MsgID {
-            get { return (ushort)pnCli2Vault.kCli2Vault_FetchNodeRefs; }
-        }
-
-        public override void Read(hsStream s) {
-            fTransID = s.ReadUInt();
-            fNodeID = s.ReadUInt();
-        }
-
-        public override void Write(hsStream s) {
-            s.WriteUInt(fTransID);
-            s.WriteUInt(fNodeID);
         }
     }
 }

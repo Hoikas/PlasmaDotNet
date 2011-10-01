@@ -55,8 +55,12 @@ namespace Plasma {
         }
 
         private bool IConnectToVault() {
+            if (fVaultCli.SocketConnected)
+                return true;
+
             // Try to connect to the VaultSrv
             pnIniParser ini = pngIni.Ini;
+            fVaultCli.Disconnected += new Action(IDisconnectedFromVault);
             fVaultCli.Host = ini["Server.Vault"];
             fVaultCli.N = ini["Server.Vault.N"];
             fVaultCli.ProductID = ini.GetGuid("Server.ProductID");
@@ -74,6 +78,11 @@ namespace Plasma {
                 return false;
 #endif
             }
+        }
+
+        private void IDisconnectedFromVault() {
+            Error("Disconnected from the VaultSrv--kicking the client");
+            KickOff(ENetError.kNetErrInternalError);
         }
 
         protected override void ReadMsg() {
@@ -101,7 +110,18 @@ namespace Plasma {
                         case pnCli2Auth.kCli2Auth_VaultFetchNodeRefs:
                             IFetchNodeRefs();
                             break;
+                        case pnCli2Auth.kCli2Auth_VaultNodeFetch:
+                            IFetchNode();
+                            break;
+                        case pnCli2Auth.kCli2Auth_VaultNodeFind:
+                            IFindNode();
+                            break;
                         default:
+                            string msgName = msgID.ToString();
+                            if (msgName != null)
+                                Error("Unimplemented MsgID: " + msgName);
+                            else
+                                Error("Received garbage--kicking off");
                             KickOff(ENetError.kNetErrDisconnected);
                             break;
                     }
@@ -120,14 +140,12 @@ namespace Plasma {
                 return;
             } catch (ObjectDisposedException) {
                 // The socket was closed.
-            }
 #if !DEBUG
-            catch (Exception e) {
-                // DO NOT CRASH
+            } catch (Exception e) {
                 Error(e, "Unhandled exception in the receive function!");
                 KickOff(ENetError.kNetErrInternalError);
-            }
 #endif
+            }
         }
 
         private void IPingPong() {

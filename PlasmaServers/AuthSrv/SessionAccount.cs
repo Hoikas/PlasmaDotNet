@@ -95,7 +95,7 @@ namespace Plasma {
                     player.fModel = info.fModel;
                     player.fPlayerID = info.fPlayerID;
                     player.fPlayerName = info.fPlayerName;
-                    player.fTransID = Convert.ToUInt32(param);
+                    player.fTransID = (uint)param;
                     toSend.Add(player);
                 }
             }

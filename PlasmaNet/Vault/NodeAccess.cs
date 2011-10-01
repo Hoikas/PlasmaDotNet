@@ -552,15 +552,15 @@ namespace Plasma {
 
     public sealed class pnVaultSDLNode : pnVaultNodeAccess {
 
-        public int StateIdent {
+        public EStandardNode StateIdent {
             get {
                 if (fBase.Int32_1.HasValue)
-                    return fBase.Int32_1.Value;
+                    return (EStandardNode)fBase.Int32_1.Value;
                 else
-                    return 0;
+                    return EStandardNode.kAgeInstanceSDLNode;
             }
 
-            set { fBase.Int32_1 = value; }
+            set { fBase.Int32_1 = (int)value; }
         }
 
         public string StateName {

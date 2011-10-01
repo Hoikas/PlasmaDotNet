@@ -312,8 +312,10 @@ namespace Plasma {
             fTransID = s.ReadUInt();
             fResult = (ENetError)s.ReadInt();
             fNodeRefs = new pnVaultNodeRef[s.ReadInt()];
-            for (int i = 0; i < fNodeRefs.Length; i++)
+            for (int i = 0; i < fNodeRefs.Length; i++) {
+                fNodeRefs[i] = new pnVaultNodeRef();
                 fNodeRefs[i].Read(s);
+            }
         }
 
         public override void Write(hsStream s) {
@@ -325,6 +327,36 @@ namespace Plasma {
                 s.WriteInt(fNodeRefs.Length);
                 foreach (pnVaultNodeRef r in fNodeRefs)
                     r.Write(s);
+            }
+        }
+    }
+
+    public class pnAuth2Cli_VaultNodeFindReply : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+        public uint[] fNodeIDs;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultNodeFindReply; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+            fNodeIDs = new uint[s.ReadInt()];
+            for (int i = 0; i < fNodeIDs.Length; i++)
+                fNodeIDs[i] = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            if (fNodeIDs == null)
+                s.WriteInt(0);
+            else {
+                s.WriteInt(fNodeIDs.Length);
+                foreach (uint nodeID in fNodeIDs)
+                    s.WriteUInt(nodeID);
             }
         }
     }

@@ -20,6 +20,8 @@ namespace Plasma {
         }
 
         public void Close() {
+            fStream.Close();
+            fSocket.Shutdown(SocketShutdown.Both);
             fSocket.Close();
             End();
         }
@@ -53,7 +55,10 @@ namespace Plasma {
                             IAcctLogin();
                             break;
                         case pnCli2Vault.kCli2Vault_FetchNodeRefs:
-                            //IFetchNodeRefs();
+                            IFetchNodeRefs();
+                            break;
+                        case pnCli2Vault.kCli2Vault_NodeFind:
+                            IFindNode();
                             break;
                         case pnCli2Vault.kCli2Vault_PingRequest:
                             IPingPong();
@@ -63,6 +68,9 @@ namespace Plasma {
                             break;
                         case pnCli2Vault.kCli2Vault_PlayerSetRequest:
                             ISetPlayer();
+                            break;
+                        case pnCli2Vault.kCli2Vault_NodeFetch:
+                            IFetchNode();
                             break;
                         default:
                             // TODO: Kick Off properly
@@ -84,6 +92,11 @@ namespace Plasma {
                 return;
             } catch (ObjectDisposedException) {
                 // The socket was closed.
+#if !DEBUG
+            } catch (Exception e) {
+                Error(e, "Unhandled exception in the receive function!");
+                Close();
+#endif
             }
         }
 

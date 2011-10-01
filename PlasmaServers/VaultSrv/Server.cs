@@ -40,13 +40,13 @@ namespace Plasma {
 
             // Try to insert the Nodes table...
             pnSqlCreateTable nodes = new pnSqlCreateTable();
-            nodes.AddColumn("Idx", typeof(uint), pnColumnOption.AutoIncrement);
-            nodes.AddColumn("CreateTime", typeof(DateTime));
-            nodes.AddColumn("ModifyTime", typeof(DateTime));
+            nodes.AddColumn("NodeIdx", typeof(uint), pnColumnOption.AutoIncrement);
+            nodes.AddColumn("CreateTime", typeof(DateTime), pnColumnOption.Nullable);
+            nodes.AddColumn("ModifyTime", typeof(DateTime), pnColumnOption.Nullable);
             nodes.AddColumn("CreateAgeName", typeof(string), pnColumnOption.VariableSize);
-            nodes.AddColumn("CreateAgeUuid", typeof(Guid));
-            nodes.AddColumn("CreatorIdx", typeof(uint));
-            nodes.AddColumn("CreatorUuid", typeof(Guid));
+            nodes.AddColumn("CreateAgeUuid", typeof(Guid), pnColumnOption.Nullable);
+            nodes.AddColumn("CreatorIdx", typeof(uint), pnColumnOption.Nullable);
+            nodes.AddColumn("CreatorUuid", typeof(Guid), pnColumnOption.Nullable);
             nodes.AddColumn("NodeType", typeof(uint));
             nodes.AddColumn("Int32_1", typeof(int), pnColumnOption.Nullable);
             nodes.AddColumn("Int32_2", typeof(int), pnColumnOption.Nullable);
@@ -56,10 +56,10 @@ namespace Plasma {
             nodes.AddColumn("UInt32_2", typeof(uint), pnColumnOption.Nullable);
             nodes.AddColumn("UInt32_3", typeof(uint), pnColumnOption.Nullable);
             nodes.AddColumn("UInt32_4", typeof(uint), pnColumnOption.Nullable);
-            nodes.AddColumn("Uuid_1", typeof(Guid));
-            nodes.AddColumn("Uuid_2", typeof(Guid));
-            nodes.AddColumn("Uuid_3", typeof(Guid));
-            nodes.AddColumn("Uuid_4", typeof(Guid));
+            nodes.AddColumn("Uuid_1", typeof(Guid), pnColumnOption.Nullable);
+            nodes.AddColumn("Uuid_2", typeof(Guid), pnColumnOption.Nullable);
+            nodes.AddColumn("Uuid_3", typeof(Guid), pnColumnOption.Nullable);
+            nodes.AddColumn("Uuid_4", typeof(Guid), pnColumnOption.Nullable);
             nodes.AddColumn("String64_1", typeof(string), pnColumnOption.VariableSize);
             nodes.AddColumn("String64_2", typeof(string), pnColumnOption.VariableSize);
             nodes.AddColumn("String64_3", typeof(string), pnColumnOption.VariableSize);
@@ -74,7 +74,7 @@ namespace Plasma {
             nodes.AddColumn("Blob_2", typeof(string));
             nodes.AddKey("NodeType"); // For VaultNodeFinds
             nodes.Name = "Nodes";
-            nodes.PrimaryKey = "Idx";
+            nodes.PrimaryKey = "NodeIdx";
             nodes.Execute(db);
 
             // Try to insert the NodeRefs table...
