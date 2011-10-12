@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 
 namespace Plasma {
-    public struct hsPoint3 {
+    public struct hsVector3 {
 
         float fX, fY, fZ;
 
-        public hsPoint3(float x, float y, float z) {
+        public hsVector3(float x, float y, float z) {
             fX = x;
             fY = y;
             fZ = z;

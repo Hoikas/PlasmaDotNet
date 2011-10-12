@@ -4,26 +4,29 @@ using System.Linq;
 using System.Text;
 
 namespace Plasma {
-    public struct hsPoint3 {
+    public struct hsQuat {
 
-        float fX, fY, fZ;
+        float fX, fY, fZ, fW;
 
-        public hsPoint3(float x, float y, float z) {
+        public hsQuat(float x, float y, float z, float w) {
             fX = x;
             fY = y;
             fZ = z;
+            fW = w;
         }
 
         public void Read(hsStream s) {
             fX = s.ReadFloat();
             fY = s.ReadFloat();
             fZ = s.ReadFloat();
+            fW = s.ReadFloat();
         }
 
         public void Write(hsStream s) {
             s.WriteFloat(fX);
             s.WriteFloat(fY);
             s.WriteFloat(fZ);
+            s.WriteFloat(fW);
         }
     }
 }

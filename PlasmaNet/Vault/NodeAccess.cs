@@ -568,6 +568,11 @@ namespace Plasma {
             set { fBase.String64_1 = value; }
         }
 
+        public byte[] Record {
+            get { return fBase.Blob_1; }
+            set { fBase.Blob_1 = value; }
+        }
+
         public pnVaultSDLNode() : base(ENodeType.kNodeSDL) { }
         public pnVaultSDLNode(pnVaultNode node) : base(node) { }
     }

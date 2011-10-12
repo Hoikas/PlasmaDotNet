@@ -71,6 +71,7 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -89,6 +90,8 @@
     <Compile Include="KeyedObject\KeySeed.cs" />
     <Compile Include="KeyedObject\Location.cs" />
     <Compile Include="Math\Point3.cs" />
+    <Compile Include="Math\Quaternion.cs" />
+    <Compile Include="Math\Vector3.cs" />
     <Compile Include="Message\ConsoleMsg.cs" />
     <Compile Include="Message\InputMsg.cs" />
     <Compile Include="Message\KIMsg.cs" />
@@ -117,8 +120,14 @@
     <Compile Include="Scene\SceneNode.cs" />
     <Compile Include="NetCommon\SynchedObject.cs" />
     <Compile Include="Scene\SceneObject.cs" />
+    <Compile Include="SDL\SDLMgr.cs" />
+    <Compile Include="SDL\SDLParser.cs" />
+    <Compile Include="SDL\StateDataRecord.cs" />
+    <Compile Include="SDL\StateDescriptor.cs" />
+    <Compile Include="SDL\StateVariable.cs" />
     <Compile Include="Stream\Stream.cs" />
     <Compile Include="Stream\TokenStream.cs" />
+    <Compile Include="Util\Color.cs" />
     <Compile Include="Util\UnifiedTime.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -138,9 +147,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="SDL\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="3rdPartyLibs\ICSharpCode.SharpZipLib.dll" />
   </ItemGroup>

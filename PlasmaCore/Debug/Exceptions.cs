@@ -29,6 +29,12 @@ namespace Plasma {
         public plFactoryException(string message) : base(message) { }
     }
 
+    public class plSDLException : hsException {
+        public plSDLException() { }
+        public plSDLException(string message) : base(message) { }
+        public plSDLException(string message, Exception inner) : base(message, inner) { }
+    }
+
     public class plZlibException : hsException {
         public plZlibException() { }
         public plZlibException(string message) : base(message) { }

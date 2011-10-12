@@ -43,8 +43,10 @@ namespace Plasma {
         }
 
         public void Close() {
-            fReader.Close();
-            fWriter.Close();
+            if (fReader != null)
+                fReader.Close();
+            if (fWriter != null)
+                fWriter.Close();
             fBaseStream.Close();
         }
 

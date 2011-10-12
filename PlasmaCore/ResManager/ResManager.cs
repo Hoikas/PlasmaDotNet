@@ -19,7 +19,7 @@ namespace Plasma {
         plKeyCollector fKeyCollector = new plKeyCollector();
         List<HoldingKey> fHeldKeys = new List<HoldingKey>();
         List<plPageInfo> fPages = new List<plPageInfo>();
-        plVersion fVersion;
+        plVersion fVersion = plVersion.MystOnline;
 
         /// <summary>
         /// Gets a list of all Registry Pages that we have read in or created

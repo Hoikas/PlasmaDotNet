@@ -114,5 +114,12 @@ namespace Plasma {
             else
                 return null;
         }
+
+        public string Peek() {
+            if (fTokens.Count > 0)
+                return fTokens.Peek();
+            else
+                return null;
+        }
     }
 }
