@@ -6,9 +6,9 @@ using System.Text;
 namespace Plasma {
     public static class plKeySeed {
 
-        static plKey fAvatarMgr = new plKey((ushort)plCreatableID.plAvatarMgr, "kAvatarMgr_KEY");
-        static plKey fClient    = new plKey((ushort)plCreatableID.plClient, "kClient_KEY");
-        static plKey fNetCliMgr = new plKey((ushort)plCreatableID.plNetClientMgr, "kNetClientMgr_KEY");
+        static plKey fAvatarMgr = new plKey(plCreatableID.plAvatarMgr, "kAvatarMgr_KEY");
+        static plKey fClient    = new plKey(plCreatableID.plClient, "kClient_KEY");
+        static plKey fNetCliMgr = new plKey(plCreatableID.plNetClientMgr, "kNetClientMgr_KEY");
 
         public static plKey AvatarMgr {
             get { return fAvatarMgr; }

@@ -20,14 +20,14 @@ namespace Plasma {
             fFlags |= BitVectorFlags.kIsSystemMessage;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fSecsRunning = s.ReadDouble();
             fSession = (SessionTypes)s.ReadByte();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteDouble(fSecsRunning);

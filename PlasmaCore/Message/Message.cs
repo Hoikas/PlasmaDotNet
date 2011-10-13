@@ -37,7 +37,7 @@ namespace Plasma {
 
         #region Bit Flag Properties
         public bool InterAgeRouting {
-            get { return ((fBCastFlags & plBCastFlags.kNetAllowInterAge) != 0); }
+            get { return fBCastFlags.HasFlag(plBCastFlags.kNetAllowInterAge); }
             set {
                 if (value)
                     fBCastFlags |= plBCastFlags.kNetAllowInterAge;
@@ -47,7 +47,7 @@ namespace Plasma {
         }
 
         public bool NetForce {
-            get { return ((fBCastFlags & plBCastFlags.kNetForce) != 0); }
+            get { return fBCastFlags.HasFlag(plBCastFlags.kNetForce); }
             set {
                 if (value)
                     fBCastFlags |= plBCastFlags.kNetForce;
@@ -57,7 +57,7 @@ namespace Plasma {
         }
 
         public bool NetPropagate {
-            get { return ((fBCastFlags & plBCastFlags.kNetPropagate) != 0); }
+            get { return fBCastFlags.HasFlag(plBCastFlags.kNetPropagate); }
             set {
                 if (value)
                     fBCastFlags |= plBCastFlags.kNetPropagate;
@@ -72,7 +72,7 @@ namespace Plasma {
         /// </summary>
         /// <seealso cref="plRelevanceRegion"/>
         public bool UseRelRegions {
-            get { return ((fBCastFlags & plBCastFlags.kNetUseRelevanceRegions) != 0); }
+            get { return fBCastFlags.HasFlag(plBCastFlags.kNetUseRelevanceRegions); }
             set {
                 if (value)
                     fBCastFlags |= plBCastFlags.kNetUseRelevanceRegions;
@@ -98,7 +98,7 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             fSender = mgr.ReadKey(s);
             fReceivers.Capacity = s.ReadInt();
             for (int i = 0; i < fReceivers.Capacity; i++)
@@ -108,7 +108,7 @@ namespace Plasma {
             fBCastFlags = (plBCastFlags)s.ReadInt();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             mgr.WriteKey(s, fSender);
             s.WriteInt(fReceivers.Count);
             for (int i = 0; i < fReceivers.Count; i++)

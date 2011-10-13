@@ -27,14 +27,14 @@ namespace Plasma {
             fBCastFlags |= plBCastFlags.kBCastByExactType;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fCommand = (Cmd)s.ReadInt();
             fString = s.ReadStdString();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteInt((int)fCommand);

@@ -8,14 +8,20 @@ namespace Plasma {
 
         static Dictionary<plTypeBounds, Type> fTypeMaps;
 
-        public static ushort ClassIndex(string type) {
+        public static plCreatableID ClassIndex(string type) {
             try {
-                return (ushort)Enum.Parse(typeof(plCreatableID), type);
+                return (plCreatableID)Enum.Parse(typeof(plCreatableID), type);
             } catch (ArgumentException) {
                 throw new plFactoryException(String.Format("Internal Type 0x{0} is not defined", type));
             }
         }
 
+        /// <summary>
+        /// Translates a given class name to a ***version-specific*** Creatable ID
+        /// </summary>
+        /// <param name="type">Creatable ID to translate</param>
+        /// <param name="v">Plasma Version to translate to</param>
+        /// <returns>Translated Creatable ID</returns>
         public static ushort ClassIndex(string type, plVersion v) {
             if (fTypeMaps == null)
                 IBuildTypeMaps();
@@ -33,7 +39,7 @@ namespace Plasma {
             return value;
         }
 
-        public static string ClassName(ushort type) {
+        public static string ClassName(plCreatableID type) {
             if (Enum.IsDefined(typeof(plCreatableID), type))
                 return Enum.GetName(typeof(plCreatableID), type);
             else
@@ -45,8 +51,8 @@ namespace Plasma {
         /// </summary>
         /// <param name="type">The universal type</param>
         /// <returns>Friendly class name</returns>
-        public static string FriendlyClassName(ushort type) {
-            switch ((plCreatableID)type) {
+        public static string FriendlyClassName(plCreatableID type) {
+            switch (type) {
                 case plCreatableID.plActivatorConditionalObject:
                     return "Activator Conditional Object";
                 case plCreatableID.plAGAnim:
@@ -222,7 +228,7 @@ namespace Plasma {
         /// </summary>
         /// <param name="s">The stream to read from</param>
         /// <returns>Internal unique type identifier</returns>
-        public static ushort Read(hsStream s) {
+        public static plCreatableID Read(hsStream s) {
             if (fTypeMaps == null)
                 IBuildTypeMaps();
 
@@ -242,10 +248,10 @@ namespace Plasma {
                 }
             }
 
-            return (ushort)type;
+            return type;
         }
 
-        public static void Write(hsStream s, ushort data) {
+        public static void Write(hsStream s, plCreatableID data) {
             if (fTypeMaps == null)
                 IBuildTypeMaps();
 
@@ -261,8 +267,8 @@ namespace Plasma {
 
             //Note: We must adjust < PotS IDs...
             if (s.Version < plVersion.PathOfTheShell)
-                if (data > (ushort)UruTypes.plAvatarSpawnNotifyMsg)
-                    data--;
+                if (end > (ushort)UruTypes.plAvatarSpawnNotifyMsg)
+                    end--;
             //End type adjustment
 
             s.WriteUShort(end);

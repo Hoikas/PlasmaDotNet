@@ -68,7 +68,7 @@ namespace Plasma {
         }
 
         public void Read(hsStream s) {
-            //Magically figure out what version we have...
+            // Magically figure out what version we have...
             uint prpVer = s.ReadUInt();
             switch (prpVer) {
                 case 1:
@@ -82,7 +82,7 @@ namespace Plasma {
                     s.Version = plVersion.MystOnline;
                     break;
                 default:
-                    //Must be some sort of Myst 5 variant...
+                    // Must be some sort of Myst 5 variant...
                     s.Rewind();
                     prpVer = (uint)s.ReadUShort();
                     switch (prpVer) {
@@ -107,14 +107,14 @@ namespace Plasma {
             else if (s.Version.IsMystOnline) fChapter = "District";
             fPage = s.ReadSafeString();
 
-            //Some more versioning stuff for Uru...
+            // Some more versioning stuff for Uru...
             if (s.Version.IsMystOnline)
                 s.Version = new plVersion(2, 0, s.ReadUShort(), 0);
             else if (s.Version.IsPreMystOnline)
                 s.Version = new plVersion(2, 0, s.ReadUShort(), s.ReadUShort());
 
             if (prpVer < 6) {
-                if (prpVer < 5) //IndexChecksum -- deprecated...
+                if (prpVer < 5) // IndexChecksum -- deprecated...
                     s.ReadUInt();
                 if (prpVer >= 2)
                     fReleaseVersion = s.ReadInt();
@@ -133,16 +133,16 @@ namespace Plasma {
                 fIndexStart = s.ReadByte();
             }
 
-            //Garbage
+            // Garbage
             if (s.Version.IsMystOnline)
                 IReadClassVersions(s);
         }
 
         private void IReadClassVersions(hsStream s) {
-            //TODO: Save this data? For now, throw it away.
+            // TODO: Save this data? For now, throw it away.
             ushort nTypes = s.ReadUShort();
             for (ushort i = 0; i < nTypes; i++) {
-                ushort type = plManagedType.Read(s);
+                plCreatableID type = plManagedType.Read(s);
                 ushort vers = s.ReadUShort();
 
                 if (vers != 0)

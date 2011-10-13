@@ -17,7 +17,7 @@ namespace Plasma {
 
         public plNetMsgGroupOwner() : base() { }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             int count = s.ReadInt();

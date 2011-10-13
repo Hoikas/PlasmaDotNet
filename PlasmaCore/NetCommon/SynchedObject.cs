@@ -42,7 +42,7 @@ namespace Plasma {
 
         #region Flag Properties
         private bool ExcludeStates {
-            get { return ((fSynchFlags & Flags.kExcludePersistentState) != 0); }
+            get { return fSynchFlags.HasFlag(Flags.kExcludePersistentState); }
             set {
                 if (value && !ExcludeStates)
                     fSynchFlags |= Flags.kExcludePersistentState;
@@ -52,7 +52,7 @@ namespace Plasma {
         }
 
         private bool VolatileStates {
-            get { return ((fSynchFlags & Flags.kHasVolatileState) != 0); }
+            get { return fSynchFlags.HasFlag(Flags.kHasVolatileState); }
             set {
                 if (value && !VolatileStates)
                     fSynchFlags |= Flags.kHasVolatileState;
@@ -62,7 +62,7 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fSynchFlags = (Flags)s.ReadInt();
@@ -78,7 +78,7 @@ namespace Plasma {
 
             //Plasma 2.1+ ends here...
             if (s.Version.IsPlasma21) {
-                fSynchFlags = 0; //Synch Flags are pretty useless in Plasma21
+                fSynchFlags = 0; // Synch Flags are pretty useless in Plasma21
                 return;
             } else if (s.Version.IsPlasma20) {
                 if (VolatileStates) {

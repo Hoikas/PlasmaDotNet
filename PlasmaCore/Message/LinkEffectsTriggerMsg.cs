@@ -37,7 +37,7 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fInvisLevel = s.ReadInt();
@@ -47,7 +47,7 @@ namespace Plasma {
             fLinkAnimKey = mgr.ReadKey(s);
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteInt(fInvisLevel);

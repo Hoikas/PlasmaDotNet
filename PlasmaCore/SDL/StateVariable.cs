@@ -44,13 +44,13 @@ namespace Plasma {
             get;
         }
 
-        public virtual void Read(hsStream s, plResManager mgr) {
+        public virtual void Read(hsStream s, hsResMgr mgr) {
             plSDL.ContentsFlags savFlags = (plSDL.ContentsFlags)s.ReadByte();
             if (savFlags.HasFlag(plSDL.ContentsFlags.kHasNotificationInfo))
                 fHint = plStateVarNotificationInfo.Read(s);
         }
 
-        public virtual void Write(hsStream s, plResManager mgr) {
+        public virtual void Write(hsStream s, hsResMgr mgr) {
             if (fHint == null)
                 s.WriteByte(0);
             else {
@@ -144,7 +144,7 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             // HOW MANY TIMES WILL WE READ THIS *&^*$^@#ing BYTE?!?!?!
@@ -166,7 +166,7 @@ namespace Plasma {
             }
         }
 
-        private void IReadData(hsStream s, plResManager mgr, int index) {
+        private void IReadData(hsStream s, hsResMgr mgr, int index) {
             switch (fDesc.Type) {
                 case plAtomicType.kAgeTimeOfDay:
                     // Nothing to read in...
@@ -178,7 +178,7 @@ namespace Plasma {
                     fValues.Insert(index, s.ReadByte());
                     break;
                 case plAtomicType.kCreatable:
-                    ushort hClass = plManagedType.Read(s);
+                    plCreatableID hClass = plManagedType.Read(s);
                     plCreatable pCre = plFactory.Create(hClass);
                     s.ReadInt(); // Size...
                     pCre.Read(s, mgr);
@@ -240,7 +240,7 @@ namespace Plasma {
             }
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             // Stupid, stupid, stupid.
@@ -264,7 +264,7 @@ namespace Plasma {
             fFlags &= ~Flags.kDirty;
         }
 
-        private void IWriteData(hsStream s, plResManager mgr, int index) {
+        private void IWriteData(hsStream s, hsResMgr mgr, int index) {
             switch (fDesc.Type) {
                 case plAtomicType.kAgeTimeOfDay:
                     // Nothing to write
@@ -397,7 +397,7 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
             s.ReadByte(); // saveFlags--Garbage here
 
@@ -429,7 +429,7 @@ namespace Plasma {
             }
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
             s.WriteByte(0);
 

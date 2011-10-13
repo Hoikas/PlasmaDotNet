@@ -21,7 +21,7 @@ namespace Plasma {
 
         public plNetMsgMembersList() : base() { }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fMembers.Capacity = (int)s.ReadShort();
@@ -49,13 +49,13 @@ namespace Plasma {
             set { fClientGuid = value; }
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             fFlags = s.ReadUInt();
             fClientGuid.Read(s, mgr);
             fAvatarUoid = mgr.ReadUoid(s);
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             s.WriteUInt(fFlags);
             fClientGuid.Write(s, mgr);
             mgr.WriteUoid(s, fAvatarUoid);

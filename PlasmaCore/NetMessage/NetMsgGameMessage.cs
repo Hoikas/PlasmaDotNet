@@ -16,8 +16,8 @@ namespace Plasma {
         public plNetMsgGameMessage() {
             fFlags |= BitVectorFlags.kNeedsReliableSend;
         }
-        
-        public plMessage GetMessage(plResManager mgr) {
+
+        public plMessage GetMessage(hsResMgr mgr) {
             hsStream s = fHelper.Stream;
             if (s == null || s.BaseStream.Length == 0)
                 return null;
@@ -31,13 +31,13 @@ namespace Plasma {
                 return null;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
             if (s.ReadBool())
                 fDeliveryTime = plUnifiedTime.Read(s);
         }
 
-        public void SetMessage(plMessage msg, plResManager mgr) {
+        public void SetMessage(plMessage msg, hsResMgr mgr) {
             hsStream s = new hsStream(new MemoryStream());
             s.Version = mgr.Version;
             if (msg != null)
@@ -45,13 +45,13 @@ namespace Plasma {
             fHelper.Stream = s;
             s.Close();
 
-            //Fill in the flags
-            //TODO: CCR -> AllPlayers
+            // Fill in the flags
+            // TODO: CCR -> AllPlayers
             InterAgeRouting = msg.InterAgeRouting;
             UseRelRegions = msg.UseRelRegions;
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteBool(fDeliveryTime.HasValue);
@@ -68,7 +68,7 @@ namespace Plasma {
             get { return fPlayerIDs; }
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             byte count = s.ReadByte();
@@ -76,7 +76,7 @@ namespace Plasma {
                 fPlayerIDs.Add(s.ReadUInt());
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteByte((byte)fPlayerIDs.Count);

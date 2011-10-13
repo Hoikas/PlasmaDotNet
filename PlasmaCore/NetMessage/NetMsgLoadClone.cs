@@ -31,16 +31,16 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
-            fObjectHelper = mgr.ReadUoid(s); //Yes, ReadUoid. Not ReadKey.
+            fObjectHelper = mgr.ReadUoid(s); // Yes, ReadUoid. Not ReadKey.
             fIsPlayer = s.ReadBool();
             fIsLoading = s.ReadBool();
             fIsInitialState = s.ReadBool();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             mgr.WriteUoid(s, fObjectHelper);

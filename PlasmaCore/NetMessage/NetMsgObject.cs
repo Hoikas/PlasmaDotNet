@@ -13,12 +13,12 @@ namespace Plasma {
             set { fObjectHelper = value; }
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
             fObjectHelper = mgr.ReadUoid(s);
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
             mgr.WriteUoid(s, fObjectHelper);
         }
@@ -28,12 +28,12 @@ namespace Plasma {
 
         protected plNetMsgStreamHelper fHelper = new plNetMsgStreamHelper();
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
             fHelper.Read(s, mgr);
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
             fHelper.Write(s, mgr);
         }

@@ -5,10 +5,10 @@ using System.Text;
 
 namespace Plasma {
     public static class plFactory {
-        public static ushort ClassIndex(plCreatable pCre) {
+        public static plCreatableID ClassIndex(plCreatable pCre) {
             string name = ClassName(pCre);
             if (Enum.IsDefined(typeof(plCreatableID), name))
-                return (ushort)Enum.Parse(typeof(plCreatableID), name);
+                return (plCreatableID)Enum.Parse(typeof(plCreatableID), name);
             else
                 throw new plFactoryException("plCreatable not in list of types!");
         }
@@ -37,8 +37,8 @@ namespace Plasma {
         /// <param name="type">The internal/universal plCreatableID of the plCreatable to create</param>
         /// <returns>The new plCreatable</returns>
         /// <exception cref="plFacotoryException">The CreatableID (type) is invalid/unknown</exception>
-        public static plCreatable Create(ushort type) {
-            switch ((plCreatableID)type) {
+        public static plCreatable Create(plCreatableID type) {
+            switch (type) {
                 case plCreatableID.plAvatarInputStateMsg:
                     return new plAvatarInputStateMsg();
                 case plCreatableID.plClientGuid:

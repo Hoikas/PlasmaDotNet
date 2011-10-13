@@ -41,7 +41,7 @@ namespace Plasma {
         Cmd fCommand = Cmd.NoCommand;
         string fUser;
         uint fPlayerID;
-        string fString = "Anonymous Coward"; //Bad things happen if this is NULL/empty
+        string fString = "Anonymous Coward"; // Bad things happen if this is NULL/empty
         Flags fFlags;
         float fDelay;
         int fValue;
@@ -72,7 +72,7 @@ namespace Plasma {
             fBCastFlags |= plBCastFlags.kBCastByExactType;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fCommand = (Cmd)s.ReadByte();
@@ -84,7 +84,7 @@ namespace Plasma {
             fValue = s.ReadInt();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteByte((byte)fCommand);

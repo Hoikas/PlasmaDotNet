@@ -14,7 +14,7 @@ namespace Plasma {
         List<plKey> fModifiers = new List<plKey>();
         plKey fSceneNode;
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fDrawInterface = mgr.ReadKey(s);

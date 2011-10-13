@@ -66,6 +66,7 @@
     <Compile Include="Core\NetServer.cs" />
     <Compile Include="Core\NetStream.cs" />
     <Compile Include="Helpers\IniParser.cs" />
+    <Compile Include="Helpers\ResManager.cs" />
     <Compile Include="NetStructs\Auth2Cli.cs" />
     <Compile Include="NetStructs\Cli2Auth.cs" />
     <Compile Include="NetStructs\Cli2File.cs" />

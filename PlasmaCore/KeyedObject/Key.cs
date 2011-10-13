@@ -10,21 +10,12 @@ namespace Plasma {
     public sealed class plKey {
 
         plUoid fKeyData;
-        hsKeyedObject fPtr;
 
         /// <summary>
         /// Get the internal data structure
         /// </summary>
         internal plUoid Uoid {
             get { return fKeyData; }
-        }
-
-        /// <summary>
-        /// Gets the KeyedObject this Key points to
-        /// </summary>
-        public hsKeyedObject Object {
-            get { return fPtr; }
-            internal set { fPtr = value; }
         }
 
         /// <summary>
@@ -42,7 +33,7 @@ namespace Plasma {
         /// <summary>
         /// Gets the Plasma Type of the KeyedObject this Key points to
         /// </summary>
-        public ushort ClassType {
+        public plCreatableID ClassType {
             get { return fKeyData.fClassType; }
         }
 
@@ -55,7 +46,7 @@ namespace Plasma {
         }
 
         public uint ObjectID {
-            get { return fKeyData.fObjectID; }
+            get { return fKeyData.fObjectID.Value; }
         }
 
         public uint CloneID {
@@ -73,12 +64,12 @@ namespace Plasma {
             fKeyData = uoid;
         }
 
-        internal plKey(ushort type, string objName) {
+        internal plKey(plCreatableID type, string objName) {
             fKeyData = new plUoid(type, objName);
         }
 
         public plKey Clone(uint id, uint playerID) {
-            plKey key = new plKey(fKeyData.Clone());
+            plKey key = new plKey((plUoid)fKeyData.Clone());
             key.fKeyData.fCloneID = id;
             key.fKeyData.fClonePlayerID = playerID;
             return key;
@@ -95,7 +86,7 @@ namespace Plasma {
         /// </summary>
         /// <remarks>
         /// This key will NOT be added to (or checked by) the internal KeyCollector; therefore, you should 
-        /// ONLY use this method if you know what you're doing! Othwerise, you will cause duplicate keys
+        /// ONLY use this method if you know what you're doing! Othwerise, you will create duplicate keys
         /// and completely screw the garbage collection.
         /// </remarks>
         /// <param name="loc">Key's Location</param>
@@ -103,7 +94,7 @@ namespace Plasma {
         /// <param name="name">Object Name</param>
         /// <param name="id">Object ID</param>
         /// <returns>Fabricated key</returns>
-        public static plKey Fabricate(plLocation loc, ushort type, string name, uint id) {
+        public static plKey Fabricate(plLocation loc, plCreatableID type, string name, uint id) {
             plUoid uoid = new plUoid(type, name);
             uoid.fLocation = loc;
             uoid.fObjectID = id;
@@ -115,7 +106,7 @@ namespace Plasma {
         }
     }
 
-    internal sealed class plUoid {
+    internal sealed class plUoid : ICloneable {
         enum ContentsFlags {
             kHasCloneIDs = 0x1,
             kHasLoadMask = 0x2,
@@ -124,18 +115,19 @@ namespace Plasma {
 
         internal plLocation fLocation = new plLocation();
         internal plLoadMask fLoadMask = plLoadMask.Always;
-        internal ushort fClassType;
+        internal plCreatableID fClassType;
         internal string fObjectName;
-        internal uint fObjectID, fCloneID, fClonePlayerID;
+        internal uint? fObjectID;
+        internal uint fCloneID, fClonePlayerID;
 
         internal plUoid() { }
-        internal plUoid(ushort type, string name) {
+        internal plUoid(plCreatableID type, string name) {
             fObjectName = name;
             fClassType = type;
         }
 
-        public plUoid Clone() {
-            return (plUoid)MemberwiseClone();
+        public object Clone() {
+            return MemberwiseClone();
         }
 
         public override bool Equals(object obj) {
@@ -145,8 +137,10 @@ namespace Plasma {
             plUoid rhs = (plUoid)obj;
             if (fLocation.Equals(rhs.fLocation))
                 if (fClassType == rhs.fClassType)
-                    if (fObjectName.Equals(rhs.fObjectName))
-                        return true;
+                    if (fObjectID.HasValue && rhs.fObjectID.HasValue)
+                        return fObjectID.Value == rhs.fObjectID.Value;
+                    else
+                        return fObjectName.Equals(rhs.fObjectName);
             return false;
         }
 
@@ -180,7 +174,7 @@ namespace Plasma {
                     fLoadMask.Write(s);
             plManagedType.Write(s, fClassType);
             if (s.Version.IsUruLive || s.Version.IsPlasma21)
-                s.WriteUInt(fObjectID);
+                s.WriteUInt(fObjectID.Value);
             s.WriteSafeString(fObjectName);
             if (s.Version.IsPlasma20)
                 if ((contents & ContentsFlags.kHasCloneIDs) != 0) {

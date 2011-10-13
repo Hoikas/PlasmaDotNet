@@ -11,12 +11,12 @@ namespace Plasma {
 
         protected plNetMsgStreamHelper fHelper = new plNetMsgStreamHelper();
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
             fHelper.Read(s, mgr);
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
             fHelper.Write(s, mgr);
         }
@@ -56,14 +56,14 @@ namespace Plasma {
             }
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
-            //Cache it.
+            // Cache it.
             fVersion = mgr.Version;
 
-            //Cyan stores these values, but we're just going to
-            //    save the stream and have fun with it...
+            // Cyan stores these values, but we're just going to
+            //     save the stream and have fun with it...
             fBuffer = new byte[s.ReadInt()];
             Compression type = (Compression)s.ReadByte();
             uint len = s.ReadUInt();
@@ -72,9 +72,9 @@ namespace Plasma {
                 short streamType = s.ReadShort();
                 byte[] buf = s.ReadBytes((int)len - 2);
 
-                //Create a zlib-compatible inflator
-                //Note: incoming has no zlib header/footer
-                //      System.IO.Compression sucks.
+                // Create a zlib-compatible inflator
+                // Note: incoming has no zlib header/footer
+                //       System.IO.Compression sucks.
                 Inflater zlib = new Inflater(true);
                 zlib.Inflate(buf);
 
@@ -84,11 +84,11 @@ namespace Plasma {
                 fBuffer = s.ReadBytes((int)len);
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
-            //We're not going to compress the stream...
-            //Hope this is okay!
+            // We're not going to compress the stream...
+            // Hope this is okay!
             s.WriteInt(fBuffer.Length);
             s.WriteByte((byte)Compression.kNone);
             s.WriteInt(fBuffer.Length);

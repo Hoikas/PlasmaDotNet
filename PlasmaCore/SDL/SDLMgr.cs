@@ -45,10 +45,9 @@ namespace Plasma {
             get { return fDescriptors; }
         }
 
-        public byte[] DumpStateRecord(plStateDataRecord record, plResManager mgr) {
+        public byte[] DumpStateRecord(plStateDataRecord record, hsResMgr mgr) {
             MemoryStream ms = new MemoryStream();
             hsStream s = new hsStream(ms);
-            if (mgr.Version != null)
             s.Version = mgr.Version;
 
             byte[] buf = null;
@@ -74,7 +73,7 @@ namespace Plasma {
             return null;
         }
 
-        public plStateDataRecord ParseStateRecord(byte[] record, plResManager mgr) {
+        public plStateDataRecord ParseStateRecord(byte[] record, hsResMgr mgr) {
             MemoryStream ms = new MemoryStream(record);
             hsStream s = new hsStream(ms);
             s.Version = mgr.Version;

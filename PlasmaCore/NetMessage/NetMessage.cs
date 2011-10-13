@@ -181,7 +181,7 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             fFlags = (BitVectorFlags)s.ReadInt();
 
             if (HasVersion) {
@@ -201,7 +201,7 @@ namespace Plasma {
                 fAcctUUID = new Guid(s.ReadBytes(16));
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             s.WriteInt((int)fFlags);
 
             if (HasVersion) {

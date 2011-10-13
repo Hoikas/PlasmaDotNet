@@ -14,7 +14,7 @@ namespace Plasma {
             fFlags |= BitVectorFlags.kNeedsReliableSend;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fIsInitialState = s.ReadBool();
@@ -22,7 +22,7 @@ namespace Plasma {
             fIsAvatarState = s.ReadBool();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteBool(fIsInitialState);

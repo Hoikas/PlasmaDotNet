@@ -53,7 +53,7 @@ namespace Plasma {
             fBCastFlags |= plBCastFlags.kNetPropagate;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fCloneKey = mgr.ReadKey(s);
@@ -72,7 +72,7 @@ namespace Plasma {
                     plFactory.ClassName(tMsg)));
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             mgr.WriteKey(s, fCloneKey);
@@ -113,7 +113,7 @@ namespace Plasma {
             fBCastFlags |= plBCastFlags.kLocalPropagate;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fIsPlayer = s.ReadBool();
@@ -133,13 +133,13 @@ namespace Plasma {
                 fUserStr = s.ReadSafeString();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteBool(fIsPlayer);
             mgr.WriteKey(s, fSpawnPoint);
 
-            //Cyan is really quite stupid sometimes...
+            // Cyan is really quite stupid sometimes...
             if (fInitialTask == null)
                 s.WriteBool(false);
             else {

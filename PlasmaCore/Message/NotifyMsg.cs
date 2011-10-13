@@ -39,7 +39,7 @@ namespace Plasma {
             fBCastFlags |= plBCastFlags.kNetPropagate;
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fType = (NotificationType)s.ReadInt();
@@ -54,7 +54,7 @@ namespace Plasma {
                 fEvents.Add(proEventData.Read(s, mgr));
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
 
             s.WriteInt((int)fType);
@@ -89,14 +89,14 @@ namespace Plasma {
             }
         }
 
-        public static proEventData Read(hsStream s, plResManager mgr) {
+        public static proEventData Read(hsStream s, hsResMgr mgr) {
             proEventData e = ICreateEventDataType((EventType)s.ReadInt());
             if (e != null)
                 e.IRead(s, mgr);
             return e;
         }
 
-        public void Write(hsStream s, plResManager mgr) {
+        public void Write(hsStream s, hsResMgr mgr) {
             if (this is proActivateEventData)
                 s.WriteInt((int)EventType.Activate);
             else if (this is proBookEventData)
@@ -135,20 +135,20 @@ namespace Plasma {
             IWrite(s, mgr);
         }
 
-        protected abstract void IRead(hsStream s, plResManager mgr);
-        protected abstract void IWrite(hsStream s, plResManager mgr);
+        protected abstract void IRead(hsStream s, hsResMgr mgr);
+        protected abstract void IWrite(hsStream s, hsResMgr mgr);
     }
 
     public sealed class proActivateEventData : proEventData {
 
         bool fActive, fActivate;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fActive = s.ReadBool();
             fActivate = s.ReadBool();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteBool(fActive);
             s.WriteBool(fActivate);
         }
@@ -158,12 +158,12 @@ namespace Plasma {
 
         uint fEvent, fLinkID;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fEvent = s.ReadUInt();
             fLinkID = s.ReadUInt();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteUInt(fEvent);
             s.WriteUInt(fLinkID);
         }
@@ -173,29 +173,29 @@ namespace Plasma {
 
         EventType fEventType;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fEventType = (EventType)s.ReadInt();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteInt((int)fEventType);
         }
     }
 
     public sealed class proClickDragEventData : proEventData {
-        protected override void IRead(hsStream s, plResManager mgr) { }
-        protected override void IWrite(hsStream s, plResManager mgr) { }
+        protected override void IRead(hsStream s, hsResMgr mgr) { }
+        protected override void IWrite(hsStream s, hsResMgr mgr) { }
     }
 
     public sealed class proClimbingBlockerHitEventData : proEventData {
 
         plKey fBlockerKey;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fBlockerKey = mgr.ReadKey(s);
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             mgr.WriteKey(s, fBlockerKey);
         }
     }
@@ -205,13 +205,13 @@ namespace Plasma {
         bool fEnter;
         plKey fHitter, fHittee;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fEnter = s.ReadBool();
             fHitter = mgr.ReadKey(s);
             fHittee = mgr.ReadKey(s);
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteBool(fEnter);
             mgr.WriteKey(s, fHitter);
             mgr.WriteKey(s, fHittee);
@@ -223,13 +223,13 @@ namespace Plasma {
         plKey fContained, fContainer;
         bool fEntering;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fContained = mgr.ReadKey(s);
             fContainer = mgr.ReadKey(s);
             fEntering = s.ReadBool();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             mgr.WriteKey(s, fContained);
             mgr.WriteKey(s, fContainer);
             s.WriteBool(fEntering);
@@ -241,12 +241,12 @@ namespace Plasma {
         int fControlKey;
         bool fDown;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fControlKey = s.ReadInt();
             fDown = s.ReadBool();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteInt(fControlKey);
             s.WriteBool(fDown);
         }
@@ -257,12 +257,12 @@ namespace Plasma {
         uint fID;
         ushort fSerial;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fID = s.ReadUInt();
             fSerial = s.ReadUShort();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteUInt(fID);
             s.WriteUShort(fSerial);
         }
@@ -274,14 +274,14 @@ namespace Plasma {
         float fDot;
         bool fEnabled;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fFacer = mgr.ReadKey(s);
             fFacee = mgr.ReadKey(s);
             fDot = s.ReadFloat();
             fEnabled = s.ReadBool();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             mgr.WriteKey(s, fFacer);
             mgr.WriteKey(s, fFacee);
             s.WriteFloat(fDot);
@@ -294,13 +294,13 @@ namespace Plasma {
         int fStage, fEvent;
         plKey fAvatar;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fStage = s.ReadInt();
             fEvent = s.ReadInt();
             fAvatar = mgr.ReadKey(s);
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteInt(fStage);
             s.WriteInt(fEvent);
             mgr.WriteKey(s, fAvatar);
@@ -312,13 +312,13 @@ namespace Plasma {
         plKey fOfferer;
         int fTargetAge, fOfferee;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fOfferer = mgr.ReadKey(s);
             fTargetAge = s.ReadInt();
             fOfferee = s.ReadInt();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             mgr.WriteKey(s, fOfferer);
             s.WriteInt(fTargetAge);
             s.WriteInt(fOfferee);
@@ -331,14 +331,14 @@ namespace Plasma {
         bool fEnabled;
         hsPoint3 fHitPoint = new hsPoint3();
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fPicker = mgr.ReadKey(s);
             fPicked = mgr.ReadKey(s);
             fEnabled = s.ReadBool();
             fHitPoint.Read(s);
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             mgr.WriteKey(s, fPicker);
             mgr.WriteKey(s, fPicked);
             s.WriteBool(fEnabled);
@@ -350,11 +350,11 @@ namespace Plasma {
 
         int fState;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fState = s.ReadInt();
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteInt(fState);
         }
     }
@@ -363,12 +363,12 @@ namespace Plasma {
 
         plKey fSpawner, fSpawnee;
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fSpawner = mgr.ReadKey(s);
             fSpawnee = mgr.ReadKey(s);
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             mgr.WriteKey(s, fSpawner);
             mgr.WriteKey(s, fSpawnee);
         }
@@ -401,14 +401,14 @@ namespace Plasma {
             set { fKey = value; }
         }
 
-        protected override void IRead(hsStream s, plResManager mgr) {
+        protected override void IRead(hsStream s, hsResMgr mgr) {
             fName = s.ReadSafeString();
             fDataType = (DataType)s.ReadInt();
             fNumber = s.ReadFloat();
             fKey = mgr.ReadKey(s);
         }
 
-        protected override void IWrite(hsStream s, plResManager mgr) {
+        protected override void IWrite(hsStream s, hsResMgr mgr) {
             s.WriteSafeString(fName);
             s.WriteInt((int)fDataType);
             s.WriteFloat(fNumber);

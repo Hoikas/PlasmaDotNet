@@ -17,7 +17,7 @@ namespace Plasma {
             get { return fGenericPool; }
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
 
             fObjectPool.Capacity = s.ReadInt();

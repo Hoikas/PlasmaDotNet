@@ -126,7 +126,7 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             fFlags = (Flags)s.ReadShort();
 
             if (HasAccount)
@@ -151,7 +151,7 @@ namespace Plasma {
                 fClientKey = s.ReadStdString();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             s.WriteShort((short)fFlags);
 
             if (HasAccount)

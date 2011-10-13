@@ -114,7 +114,7 @@ namespace Plasma {
         }
         #endregion
 
-        internal void ReadStreamHeader(hsStream s, plResManager mgr) {
+        internal void ReadStreamHeader(hsStream s, hsResMgr mgr) {
             plSDL.ContentsFlags savFlags = (plSDL.ContentsFlags)s.ReadShort();
             if (!savFlags.HasFlag(plSDL.ContentsFlags.kAddedVarLengthIO))
                 throw new NotSupportedException("Bad StateDataRecord IO Flag");
@@ -133,7 +133,7 @@ namespace Plasma {
                 fUoid = mgr.ReadUoid(s);
         }
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             s.ReadUShort(); // fFlags--but they're rubbish
             if (s.ReadByte() != kIoVersion)
                 throw new NotSupportedException("Bad StateDataRecord IO Version");
@@ -159,7 +159,7 @@ namespace Plasma {
             }
         }
 
-        internal void WriteStreamHeader(hsStream s, plResManager mgr) {
+        internal void WriteStreamHeader(hsStream s, hsResMgr mgr) {
             plSDL.ContentsFlags cf = plSDL.ContentsFlags.kAddedVarLengthIO;
             if (fUoid != null)
                 cf |= plSDL.ContentsFlags.kHasUoid;
@@ -170,7 +170,7 @@ namespace Plasma {
                 mgr.WriteUoid(s, fUoid);
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             s.WriteUShort(0); // Flags (Rubbish)
             s.WriteByte(kIoVersion);
 

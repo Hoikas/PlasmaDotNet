@@ -5,28 +5,10 @@ using System.Linq;
 using System.Text;
 
 namespace Plasma {
-    public class plResManager {
-        class HoldingKey {
-            public plKey fKey;
-            public int fOffset;
-            public int fSize;
-            public hsStream fStream;
-        }
 
-        public event plOperationProgress OnProgress;
-        public event plOperationDescriptor OnProgressStart;
+    public abstract class hsResMgr {
 
-        plKeyCollector fKeyCollector = new plKeyCollector();
-        List<HoldingKey> fHeldKeys = new List<HoldingKey>();
-        List<plPageInfo> fPages = new List<plPageInfo>();
-        plVersion fVersion = plVersion.MystOnline;
-
-        /// <summary>
-        /// Gets a list of all Registry Pages that we have read in or created
-        /// </summary>
-        public List<plPageInfo> Pages {
-            get { return fPages; }
-        }
+        protected plVersion fVersion = plVersion.MystOnline;
 
         /// <summary>
         /// Gets or sets the Version this ResManager is currently using
@@ -43,11 +25,111 @@ namespace Plasma {
             set { fVersion = value; }
         }
 
-        public plKey FindKey(plLocation loc, ushort type, string name) {
+        internal virtual plKey ReRegister(plUoid uoid) {
+            // Returns an unchecked key.
+            return new plKey(uoid); 
+        }
+
+        /// <summary>
+        /// Reads an arbitrary Creatable from the current position in the stream
+        /// </summary>
+        /// <param name="s">Stream to read from</param>
+        /// <returns></returns>
+        public plCreatable ReadCreatable(hsStream s) {
+            plCreatable pCre = plFactory.Create(plManagedType.Read(s));
+            if (pCre != null)
+                pCre.Read(s, this);
+            return pCre;
+        }
+
+        /// <summary>
+        /// Reads a key reference from the stream
+        /// </summary>
+        /// <param name="s">Stream containing a key reference</param>
+        /// <returns>The key referenced in the stream or null (if null reference)</returns>
+        public plKey ReadKey(hsStream s) {
+            if (!s.Version.IsPlasma21)
+                if (!s.ReadBool()) return null;
+
+            return ReadUoid(s);
+        }
+
+
+        public plKey ReadUoid(hsStream s) {
+            plUoid uoid = new plUoid();
+            uoid.Read(s);
+
+            // Plasma21+ uses an Invalid plLocation to indicate NULL keys
+            if (s.Version.IsPlasma21 && uoid.fLocation.Invalid)
+                return null;
+            else
+                return ReRegister(uoid);
+        }
+
+        public void WriteCreatable(hsStream s, plCreatable pCre) {
+            if (pCre == null)
+                plManagedType.Write(s, plCreatableID.NULL);
+            else {
+                plManagedType.Write(s, plFactory.ClassIndex(pCre));
+                pCre.Write(s, this);
+            }
+        }
+
+        public void WriteKey(hsStream s, plKey key) {
+            if (s.Version.IsPlasma20) {
+                if (key == null) {
+                    s.WriteBool(false);
+                    return;
+                } else {
+                    s.WriteBool(true);
+                    key.Uoid.Write(s);
+                }
+            } else {
+                if (key == null)
+                    new plUoid().Write(s); // Invalid...
+                else
+                    key.Uoid.Write(s);
+            }
+        }
+
+        public void WriteUoid(hsStream s, plKey uoid) {
+            if (uoid == null) {
+                plUoid nil = new plUoid();
+                nil.Write(s);
+            } else
+                uoid.Uoid.Write(s);
+        }
+    }
+
+    public class plResManager : hsResMgr {
+        class HoldingKey {
+            public plKey fKey;
+            public int fOffset;
+            public int fSize;
+            public hsStream fStream;
+        }
+
+        public event plOperationProgress OnProgress;
+        public event plOperationDescriptor OnProgressStart;
+
+        plKeyCollector fKeyCollector = new plKeyCollector();
+        Dictionary<plKey, hsKeyedObject> fObjects = new Dictionary<plKey, hsKeyedObject>();
+        List<HoldingKey> fHeldKeys = new List<HoldingKey>();
+        List<plPageInfo> fPages = new List<plPageInfo>();
+        
+
+        /// <summary>
+        /// Gets a list of all Registry Pages that we have read in or created
+        /// </summary>
+        public List<plPageInfo> Pages {
+            get { return fPages; }
+        }
+
+        public plKey FindKey(plLocation loc, plCreatableID type, string name) {
             return fKeyCollector.FindKey(loc, type, name);
         }
 
-        private plKey IFindOrCreateKey(plUoid uoid) {
+        internal override plKey ReRegister(plUoid uoid) {
             plKey key = fKeyCollector.FindKey(uoid);
             if (key == null) {
                 key = new plKey(uoid);
@@ -57,15 +139,15 @@ namespace Plasma {
             return key;
         }
 
-        public List<plKey> GetKeys(plLocation loc) {
+        public IList<plKey> GetKeys(plLocation loc) {
             return fKeyCollector.GetKeys(loc);
         }
 
-        public List<plKey> GetKeys(plLocation loc, ushort type) {
+        public IList<plKey> GetKeys(plLocation loc, plCreatableID type) {
             return fKeyCollector.GetKeys(loc, type);
         }
 
-        public List<ushort> GetTypes(plLocation loc) {
+        public IList<plCreatableID> GetTypes(plLocation loc) {
             return fKeyCollector.GetTypes(loc);
         }
 
@@ -74,17 +156,17 @@ namespace Plasma {
 
             int types = s.ReadInt();
             for (int i = 0; i < types; i++) {
-                ushort type = plManagedType.Read(s);
+                plCreatableID type = plManagedType.Read(s);
                 if (s.Version >= plVersion.MystOnline) {
-                    s.ReadInt();  //Size until the next type
-                    s.ReadByte(); //Flags???
+                    s.ReadInt();  // Size until the next type
+                    s.ReadByte(); // Flags???
                 }
 
                 int count = s.ReadInt();
 
-                //Some optimizations
+                // Some optimizations
                 keyring.Capacity += count;
-                fKeyCollector.Reserve(loc, count);
+                fKeyCollector.Reserve(loc, type, count);
 
                 for (int j = 0; j < count; j++) {
                     HoldingKey key = new HoldingKey();
@@ -101,24 +183,12 @@ namespace Plasma {
             return keyring;
         }
 
-        /// <summary>
-        /// Reads an arbitrary Creatable from the current position in the stream
-        /// </summary>
-        /// <param name="s">Stream to read from</param>
-        /// <returns></returns>
-        public plCreatable ReadCreatable(hsStream s) {
-            plCreatable pCre = plFactory.Create(plManagedType.Read(s));
-            if (pCre != null)
-                pCre.Read(s, this);
-            return pCre;
-        }
-
         private void IReadHoldingKey(HoldingKey key) {
-            //Prep the source stream...
+            // Prep the source stream...
             hsStream s = key.fStream;
             s.Seek(key.fOffset);
 
-            //Let's dump this object into a protected stream
+            // Let's dump this object into a protected stream
             MemoryStream ms = new MemoryStream();
             ms.Write(s.ReadBytes(key.fSize), 0, key.fSize);
             ms.Position = 0;
@@ -128,34 +198,27 @@ namespace Plasma {
             pStream.Version = s.Version;
             plCreatable pCre = ReadCreatable(pStream);
 
-            //Do we need to use a plHexBuffer (unimplemented data)
+            // Do we need to use a plHexBuffer (unimplemented data)
             if (pCre == null) {
                 plHexBuffer buf = new plHexBuffer();
                 buf.Read(pStream, this);
-                key.fKey.Object = buf;
+                fObjects.Add(key.fKey, buf);
 
                 plDebugLog.GetLog("ResManager").Warn(String.Format(
                     "Unimplemented KeyedObject '{0}' in {1}",
                     plManagedType.ClassName(key.fKey.ClassType),
                     key.fKey.Location));
             } else
-                key.fKey.Object = pCre as hsKeyedObject;
+                fObjects.Add(key.fKey, (hsKeyedObject)pCre);
 
             //Need to warn about read/size mismatch?
             if (ms.Length > ms.Position)
                 plDebugLog.GetLog("ResManager").Warn(
                     String.Format("Read Error: {0} has {1} bytes left over", key.fKey.ObjectName, (ms.Length - ms.Position)));
 
-            //Clean up
+            // Clean up
             pStream.Close();
             ms.Close();
-        }
-
-        public plKey ReadKey(hsStream s) {
-            if (!s.Version.IsPlasma21)
-                if (!s.ReadBool()) return null;
-
-            return ReadUoid(s);
         }
 
         /// <summary>
@@ -164,29 +227,19 @@ namespace Plasma {
         /// <param name="key">The Key of the object to read</param>
         /// <returns>The object read in. NULL if the Key is not being held or is no longer in the collection.</returns>
         public hsKeyedObject ReadObject(plKey key) {
-            //Note: Don't trust the plKey passed in to be
-            //      the same key we have stored in fHeldKeys
-            //      or the plKeyCollector...
-            plKey found = fKeyCollector.FindKey(key.Uoid);
-            if (found == null) {
-                plDebugLog.GetLog("ResManager").Error("Key not in collection: " + key.ToString());
-                return null;
-            }
-
-            if (found.Object != null) {
+            if (fObjects.ContainsKey(key)) {
                 plDebugLog.GetLog("ResManager").Warn("Redundant attempt to ReadObject: " + key.ToString());
-                return found.Object;
+                return fObjects[key];
             }
 
             for (int i = 0; i < fHeldKeys.Count; i++)
-                if (fHeldKeys[i].fKey.Equals(found)) {
+                if (fHeldKeys[i].fKey.Equals(key)) {
                     IReadHoldingKey(fHeldKeys[i]);
-                    found.Object = fHeldKeys[i].fKey.Object;
                     fHeldKeys.RemoveAt(i);
-                    return found.Object;
+                    return fObjects[key];
                 }
 
-            //Still here?
+            // Still here?
             plDebugLog.GetLog("ResManager").Error("Tried to ReadObject whose key is not being held: " + key.ToString());
             return null;
         }
@@ -197,7 +250,7 @@ namespace Plasma {
         /// <param name="filename">Path to the Plasma Registry Page</param>
         /// <param name="readObjects">Whether or not we should read in the KeyedObjects</param>
         /// <returns>PageInfo representing this Plasma Registry Page</returns>
-        public plPageInfo ReadPage(string filename, bool readObjects) {
+        public plPageInfo ReadPage(string filename, bool readObjects = false) {
             return ReadPage(filename, readObjects, true);
         }
 
@@ -208,7 +261,7 @@ namespace Plasma {
         /// <param name="readObjects">Whether or not we should read in the KeyedObjects</param>
         /// <param name="progress">Whether or not this should dispatch a plOperationProgress event</param>
         /// <returns>PageInfo representing this Plasma Registry Page</returns>
-        public plPageInfo ReadPage(string filename, bool readObjects, bool progress) {
+        public plPageInfo ReadPage(string filename, bool readObjects = false, bool progress = true) {
             plDebugLog.GetLog("ResManager").Debug("Reading PRP: " + Path.GetFileName(filename));
             hsStream s = new hsStream(filename);
 
@@ -243,7 +296,7 @@ namespace Plasma {
             return info;
         }
 
-        public List<plPageInfo> ReadPages(string[] pages, bool readObjects) {
+        public List<plPageInfo> ReadPages(string[] pages, bool readObjects = false) {
             if (OnProgressStart != null)
                 OnProgressStart(plOperationType.ReadingPages, String.Format("Reading {0} Registry Pages", pages.Length));
 
@@ -257,51 +310,6 @@ namespace Plasma {
             }
 
             return retval;
-        }
-
-        public plKey ReadUoid(hsStream s) {
-            plUoid uoid = new plUoid();
-            uoid.Read(s);
-
-            //Plasma21+ uses an Invalid plLocation to indicate NULL keys
-            if (s.Version.IsPlasma21 && uoid.fLocation.Invalid)
-                return null;
-            else
-                return IFindOrCreateKey(uoid);
-        }
-
-        public void WriteCreatable(hsStream s, plCreatable pCre) {
-            if (pCre == null)
-                plManagedType.Write(s, (ushort)plCreatableID.NULL);
-            else {
-                plManagedType.Write(s, plFactory.ClassIndex(pCre));
-                pCre.Write(s, this);
-            }
-        }
-
-        public void WriteKey(hsStream s, plKey key) {
-            if (s.Version.IsPlasma20) {
-                if (key == null) {
-                    s.WriteBool(false);
-                    return;
-                } else {
-                    s.WriteBool(true);
-                    key.Uoid.Write(s);
-                }
-            } else {
-                if (key == null)
-                    new plUoid().Write(s); //Invalid...
-                else
-                    key.Uoid.Write(s);
-            }
-        }
-
-        public void WriteUoid(hsStream s, plKey uoid) {
-            if (uoid == null) {
-                plUoid nil = new plUoid();
-                nil.Write(s);
-            } else
-                uoid.Uoid.Write(s);
         }
     }
 }

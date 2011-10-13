@@ -8,12 +8,12 @@ namespace Plasma {
 
         ushort fState;
 
-        public override void Read(hsStream s, plResManager mgr) {
+        public override void Read(hsStream s, hsResMgr mgr) {
             base.Read(s, mgr);
             fState = s.ReadUShort();
         }
 
-        public override void Write(hsStream s, plResManager mgr) {
+        public override void Write(hsStream s, hsResMgr mgr) {
             base.Write(s, mgr);
             s.WriteUShort(fState);
         }
