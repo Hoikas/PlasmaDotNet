@@ -4,11 +4,66 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.ServiceProcess;
 using System.Text;
 using OpenSSL;
 
 namespace Plasma {
-    sealed class Program {
+    sealed class Program : ServiceBase {
+
+        protected override void OnStart(string[] args)
+        {
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+            string[] arguments;
+            if(args.Length == 0)
+                arguments = new string[] { "auth", "file", "game", "gate", "lookup", "vault" };
+            else
+                arguments = args;
+
+            if (!ILoadConfig()) return;
+            
+            // Decide which servers we need to spawn...
+            bool auth = false;
+            bool file = false;
+            bool game = false;
+            bool gate = false;
+            bool lookup = false;
+            bool vault  = false;
+
+            foreach (string arg in arguments) {
+                if (arg.ToLower() == "auth")
+                    auth = true;
+                else if (arg.ToLower() == "file")
+                    file = true;
+                else if (arg.ToLower() == "game")
+                    game = true;
+                else if (arg.ToLower() == "gate")
+                    gate = true;
+                else if (arg.ToLower() == "lookup")
+                    lookup = true;
+                else if (arg.ToLower() == "vault")
+                    vault = true;
+            }
+
+            // Test the database connection
+            if (auth || vault)
+                if (!ITestDb())
+                    return;
+
+            // Start the lobby server with the requested services...
+            pnLobby lobby = new pnLobby(auth, file, game, gate, lookup, vault);
+            lobby.Listen();
+        }
+
+        protected override void OnStop()
+        {
+            // TODO: Exit
+            throw new NotImplementedException();
+        }
+
+        public Program() {
+            this.ServiceName = "PlasmaServers";
+        }
 
         static void Main(string[] args) {
             Console.WriteLine("Plasma .NET Servers Copyright (C) 2011  Adam Johnson");
@@ -21,16 +76,18 @@ namespace Plasma {
             // Check the arguments to see what we need to do...
             // If the first arg is /KeyGen, then generate some keys for the INI
             // Else, we may have /Daemon (default) with a list of servers to spawn
-            if (args.Length == 0)
-                IRunDaemon(new string[] { "auth", "file", "game", "gate", "lookup", "vault" });
-            else if (args[0].ToLower() == "/keygen")
+            if (args.Length == 0) {
+                ServiceBase.Run(new Program());
+            } else if (args[0].ToLower() == "/keygen") {
                 IGenerateKeys();
-            else
-                IRunDaemon(args);
+            } else if (args[0].ToLower() == "/debug"){
+                Program prog = new Program();
+                prog.IRunDaemon(args);
+            }
         }
 
         #region Interactive Console
-        static void IInteractiveMode() {
+        void IInteractiveMode() {
             // Try not to crash it... Otherwise you're screwed.
             bool keepGoing = true;
             while (keepGoing) {
@@ -39,7 +96,7 @@ namespace Plasma {
             }
         }
 
-        static bool IExecuteLine(string line) {
+        bool IExecuteLine(string line) {
             string lower = line.ToLower();
             
             if (lower.StartsWith("acctadd")) {
@@ -61,7 +118,7 @@ namespace Plasma {
             return true;
         }
 
-        static void IAddAccount(string[] args) {
+        void IAddAccount(string[] args) {
             if (args.Length < 2) {
                 Console.WriteLine("Usage: addacct <username> <password> [permissions]");
                 Console.Write("Valid Permissions:");
@@ -148,7 +205,7 @@ namespace Plasma {
         }
         #endregion
 
-        static bool ILoadConfig() {
+        bool ILoadConfig() {
             // Load the configuration
             if (!pngIni.Init()) {
                 Console.WriteLine("ERROR: PlasmaServers.ini missing or mangled.");
@@ -197,7 +254,7 @@ namespace Plasma {
             return true;
         }
 
-        static void IRunDaemon(string[] args) {
+        void IRunDaemon(string[] args) {
             if (!ILoadConfig()) return;
             
             // Decide which servers we need to spawn...
@@ -247,7 +304,7 @@ namespace Plasma {
             throw new NotImplementedException();
         }
 
-        private static bool ITestDb() {
+        private bool ITestDb() {
             try {
                 // Use var because I don't want to write out the whole type or add a using
                 var conn = pnDatabase.Connect();
