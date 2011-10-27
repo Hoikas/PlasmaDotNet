@@ -135,6 +135,18 @@ namespace Plasma {
             }
         }
 
+        public void SetPlayer(uint playerID, pnCallback cb = null) {
+            pnCli2Auth_AcctSetPlayerRequest req = new pnCli2Auth_AcctSetPlayerRequest();
+            req.fPlayerID = playerID;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
         protected override void OnReceive() {
             try {
                 lock (fStream) {
@@ -145,6 +157,9 @@ namespace Plasma {
                             break;
                         case pnAuth2Cli.kAuth2Cli_AcctPlayerInfo:
                             IPlayerInfo();
+                            break;
+                        case pnAuth2Cli.kAuth2Cli_AcctSetPlayerReply:
+                            IPlayerSet();
                             break;
                         case pnAuth2Cli.kAuth2Cli_ClientRegisterReply:
                             IClientRegistered();
@@ -169,6 +184,8 @@ namespace Plasma {
                             break;
                     }
                 }
+
+                IReceive();
             } catch (EndOfStreamException) {
                 // Disconnected in a strange way
                 IDisconnected();
@@ -182,8 +199,6 @@ namespace Plasma {
                 IDisconnected();
                 return;
             }
-
-            IReceive();
         }
 
         private void IClientRegistered() {
@@ -221,6 +236,12 @@ namespace Plasma {
                 PlayerInfo(notify.fPlayerID, notify.fPlayerName, notify.fModel);
         }
 
+        private void IPlayerSet() {
+            pnAuth2Cli_AcctSetPlayerReply reply = new pnAuth2Cli_AcctSetPlayerReply();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, null });
+        }
+
         private void IServerAddr() {
             pnAuth2Cli_ServerAddr notify = new pnAuth2Cli_ServerAddr();
             notify.Read(fStream);
@@ -244,6 +265,7 @@ namespace Plasma {
     public delegate void pnAuthClientRegistered(uint challenge);
     public delegate void pnAuthLoggedIn(ENetError result, Guid acctGuid, uint[] droidKey, object param);
     public delegate void pnAuthPlayerInfo(uint playerID, string name, string model);
+    public delegate void pnAuthPlayerSet(ENetError result, object param);
     public delegate void pnAuthServerAddr(IPAddress ip, Guid token);
     public delegate void pnAuthVaultNodeFetched(ENetError result, pnVaultNode node, object param);
     public delegate void pnAuthVaultNodeRefsFetched(ENetError result, pnVaultNodeRef[] refs, object param);

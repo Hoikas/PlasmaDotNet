@@ -146,6 +146,8 @@ namespace Plasma {
                             break;
                     }
                 }
+
+                IReceive();
             } catch (EndOfStreamException) {
                 // Disconnected in a strange way
                 IDisconnected();
@@ -159,8 +161,6 @@ namespace Plasma {
                 IDisconnected();
                 return;
             }
-
-            IReceive();
         }
 
         private void ILoggedIn() {
