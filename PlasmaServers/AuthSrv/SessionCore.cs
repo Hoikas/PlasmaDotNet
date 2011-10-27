@@ -73,8 +73,6 @@ namespace Plasma {
                 throw e;
 #else
                 Error(e, "Failed to connect to VaultSrv");
-                reply.fResult = ENetError.kNetErrInternalError;
-                reply.Send(fStream);
                 return false;
 #endif
             }
