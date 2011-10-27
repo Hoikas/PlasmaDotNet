@@ -50,13 +50,17 @@
     <Compile Include="AuthSrv\SessionAccount.cs" />
     <Compile Include="AuthSrv\SessionCore.cs" />
     <Compile Include="AuthSrv\SessionVault.cs" />
-    <Compile Include="serviceinstaller.cs" />
+    <Compile Include="serviceinstaller.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Db\Database.cs" />
     <Compile Include="Db\CreateTable.cs" />
     <Compile Include="Db\InsertStatement.cs" />
     <Compile Include="Db\SelectStatement.cs" />
     <Compile Include="SrvCore\Lobby.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Program.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SrvCore\Session.cs" />
     <Compile Include="VaultCli\Cli2Vault.cs" />

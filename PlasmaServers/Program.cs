@@ -11,9 +11,12 @@ using OpenSSL;
 namespace Plasma {
     sealed class Program : ServiceBase {
 
-        protected override void OnStart(string[] args)
-        {
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location));
+        public Program() : base() {
+            ServiceName = "PlasmaServers";
+        }
+
+        protected override void OnStart(string[] args) {
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location));
             string[] arguments;
             if(args.Length == 0)
                 arguments = new string[] { "auth", "file", "game", "gate", "lookup", "vault" };
@@ -55,14 +58,9 @@ namespace Plasma {
             lobby.Listen();
         }
 
-        protected override void OnStop()
-        {
+        protected override void OnStop() {
             // TODO: Exit
             throw new NotImplementedException();
-        }
-
-        public Program() {
-            this.ServiceName = "PlasmaServers";
         }
 
         static void Main(string[] args) {
@@ -82,7 +80,10 @@ namespace Plasma {
                 IGenerateKeys();
             } else if (args[0].ToLower() == "/debug"){
                 Program prog = new Program();
-                prog.IRunDaemon(args);
+                if (args.Length == 1)
+                    prog.IRunDaemon(new string[] { "auth", "file", "game", "gate", "lookup", "vault" });
+                else
+                    prog.IRunDaemon(args);
             }
         }
 
