@@ -378,6 +378,7 @@ namespace Plasma {
 
         public int Version {
             get { return fVersion; }
+            set { fVersion = value; }
         }
 
         internal plSDVarDescriptor() { }

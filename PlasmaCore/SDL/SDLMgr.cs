@@ -66,10 +66,21 @@ namespace Plasma {
         }
 
         public plStateDescriptor FindDescriptor(plSDVarDescriptor sd) {
-            foreach (plStateDescriptor desc in fDescriptors)
-                if (desc.Name == sd.Descriptor &&
-                    desc.Version == sd.Version)
-                    return desc;
+            if (sd.Version == -1) {
+                plStateDescriptor match = null;
+                foreach (plStateDescriptor desc in fDescriptors)
+                    if (desc.Name == sd.Descriptor)
+                        if (match == null)
+                            match = desc;
+                        else if (match.Version < desc.Version)
+                            match = desc;
+                if (match != null)
+                    sd.Version = match.Version;
+                return match;
+            } else
+                foreach (plStateDescriptor desc in fDescriptors)
+                    if (desc.Name == sd.Descriptor && desc.Version == sd.Version)
+                        return desc;
             return null;
         }
 
@@ -82,8 +93,10 @@ namespace Plasma {
             try {
                 result.ReadStreamHeader(s, mgr);
                 result.Read(s, mgr);
+#if !DEBUG
             } catch (Exception e) {
                 throw new plSDLException("Failed to parse StateDataRecord", e);
+#endif
             } finally {
                 s.Close();
                 ms.Close();

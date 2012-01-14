@@ -385,6 +385,9 @@ namespace Plasma {
         internal plSDStateVariable(plSDLMgr mgr, plSDVarDescriptor desc) {
             fMgr = mgr;
             fDesc = desc;
+
+            // Updates the Version field
+            mgr.FindDescriptor(desc);
         }
 
         #region IEnumerable
@@ -408,7 +411,7 @@ namespace Plasma {
             fRecords.Capacity = count; // Optimization
 
             // Cyan's trick to prevent sending unused data records
-            int varsize = fDesc.VariableLength ? Int32.MaxValue : count;
+            int varsize; unchecked { varsize = fDesc.VariableLength ? (int)0xFFFFFFFF : count; }
             int used = plSDL.VariableLengthRead(s, varsize);
             bool all = (used == count);
 
@@ -447,7 +450,7 @@ namespace Plasma {
                 if (fRecords[i].Used)
                     recs.Add(i);
 
-            int varsize = fDesc.VariableLength ? Int32.MaxValue : count;
+            int varsize; unchecked { varsize = fDesc.VariableLength ? (int)0xFFFFFFFF : count; }
             bool all = (recs.Count == fRecords.Count);
             plSDL.VariableLengthWrite(s, varsize, recs.Count);
 
