@@ -25,42 +25,7 @@ namespace Plasma {
         }
     }
 
-    public abstract class plStateVariable {
-
-        string fHint;
-
-        /// <summary>
-        /// Gets whether or not this value has been changed from the last saved state
-        /// </summary>
-        public abstract bool Dirty {
-            get;
-        }
-
-        public abstract bool Used {
-            get;
-        }
-
-        public abstract plVarDescriptor Descriptor {
-            get;
-        }
-
-        public virtual void Read(hsStream s, hsResMgr mgr) {
-            plSDL.ContentsFlags savFlags = (plSDL.ContentsFlags)s.ReadByte();
-            if (savFlags.HasFlag(plSDL.ContentsFlags.kHasNotificationInfo))
-                fHint = plStateVarNotificationInfo.Read(s);
-        }
-
-        public virtual void Write(hsStream s, hsResMgr mgr) {
-            if (fHint == null)
-                s.WriteByte(0);
-            else {
-                s.WriteByte((byte)plSDL.ContentsFlags.kHasNotificationInfo);
-                plStateVarNotificationInfo.Write(s, fHint);
-            }
-        }
-    }
-
-    public class plSimpleStateVariable : plStateVariable, IEnumerable<object> {
+    public class plStateVariable : IEnumerable<object> {
 
         [Flags]
         protected enum Flags {
@@ -68,9 +33,10 @@ namespace Plasma {
             kUsed = 0x2
         }
 
+        string fHint;
         Flags fFlags;
-        plSimpleVarDescriptor fDesc;
-        DateTime fModified = plUnifiedTime.Epoch;
+        plVarDescriptor fDesc;
+        DateTime fModified = plUnifiedTime.Epoch; // Simple vars only
         List<object> fValues = new List<object>();
 
         /// <summary>
@@ -82,13 +48,13 @@ namespace Plasma {
         public object this[int index] {
             get {
                 // If we're not used, then let's be nice and return the default value...
-                if (!Used)
-                    return fDesc.DefaultValue;
+                if (!Used && !fDesc.IsStateDesc)
+                    return fDesc.Default;
 
                 if (!fDesc.VariableLength && index > fDesc.Count)
                     throw new IndexOutOfRangeException();
                 else if (fValues.Count > index)
-                    return fDesc.DefaultValue;
+                    return fDesc.Default;
                 else
                     return fValues[index];
             }
@@ -96,8 +62,9 @@ namespace Plasma {
             set {
                 // We'll pretend NULL == "default state"
                 object val = value;
-                if (value == fDesc.DefaultValue)
-                    val = null;
+                if (!fDesc.IsStateDesc)
+                    if (value == fDesc.Default)
+                        val = null;
 
                 if (!fDesc.VariableLength && index > fDesc.Count)
                     throw new IndexOutOfRangeException();
@@ -118,19 +85,38 @@ namespace Plasma {
             }
         }
 
-        public override plVarDescriptor Descriptor {
+        public plVarDescriptor Descriptor {
             get { return fDesc; }
         }
 
-        public override bool Dirty {
-            get { return fFlags.HasFlag(Flags.kDirty); }
+        public bool Dirty {
+            get {
+                // Sigh...
+                if (fDesc.IsStateDesc)
+                    foreach (object o in fValues)
+                        if (((plStateDataRecord)o).Dirty) {
+                            fFlags |= Flags.kDirty;
+                            break;
+                        }
+
+                return fFlags.HasFlag(Flags.kDirty); 
+            }
         }
 
-        public override bool Used {
-            get { return fFlags.HasFlag(Flags.kUsed); }
+        public bool Used {
+            get {
+                // Sigh...
+                if (fDesc.IsStateDesc)
+                    foreach (object o in fValues)
+                        if (((plStateDataRecord)o).Used) {
+                            fFlags |= Flags.kUsed;
+                            break;
+                        }
+                return fFlags.HasFlag(Flags.kUsed);
+            }
         }
 
-        internal plSimpleStateVariable(plSimpleVarDescriptor desc) {
+        internal plStateVariable(plVarDescriptor desc) {
             fDesc = desc;
         }
 
@@ -144,14 +130,19 @@ namespace Plasma {
         }
         #endregion
 
-        public override void Read(hsStream s, hsResMgr mgr) {
-            base.Read(s, mgr);
+        public void Read(hsStream s, hsResMgr mgr) {
+            plSDL.ContentsFlags savFlags = (plSDL.ContentsFlags)s.ReadByte();
+            if (savFlags.HasFlag(plSDL.ContentsFlags.kHasNotificationInfo))
+                fHint = plStateVarNotificationInfo.Read(s);
 
             // HOW MANY TIMES WILL WE READ THIS *&^*$^@#ing BYTE?!?!?!
             // ... At least there is no io version *scnr*
-            plSDL.ContentsFlags savFlags = (plSDL.ContentsFlags)s.ReadByte();
-            if (savFlags.HasFlag(plSDL.ContentsFlags.kHasTimeStamp))
-                fModified = plUnifiedTime.Read(s);
+            savFlags = (plSDL.ContentsFlags)s.ReadByte();
+            if (!fDesc.IsStateDesc) {
+                if (savFlags.HasFlag(plSDL.ContentsFlags.kHasTimeStamp))
+                    fModified = plUnifiedTime.Read(s);
+            } else
+                savFlags &= ~plSDL.ContentsFlags.kSameAsDefault;
 
             if (!savFlags.HasFlag(plSDL.ContentsFlags.kSameAsDefault)) {
                 int count = fDesc.Count;
@@ -160,13 +151,38 @@ namespace Plasma {
                 fValues.Clear();
                 fValues.Capacity = count; // Optimization
 
-                for (int i = 0; i < count; i++)
-                    IReadData(s, mgr, i);
+                if (fDesc.IsStateDesc) {
+                    // Cyan's trick to prevent sending unused data records
+                    int varsize; unchecked { varsize = fDesc.VariableLength ? (int)0xFFFFFFFF : count; }
+                    int used = plSDL.VariableLengthRead(s, varsize);
+                    bool all = (used == count);
+
+                    // Look up the State Descriptor... We need to supply this to the
+                    // State Data Record ourselves because there is no embedded header
+                    plStateDescriptor desc = plSDLMgr.FindDescriptor(fDesc);
+                    for (int i = 0; i < count; i++) {
+                        plStateDataRecord sdr = new plStateDataRecord();
+                        sdr.Descriptor = desc;
+                        fValues.Insert(i, sdr);
+                    }
+
+                    // Now actually read them in
+                    for (int i = 0; i < used; i++) {
+                        int index = i;
+                        if (!all)
+                            index = plSDL.VariableLengthRead(s, varsize);
+                        ((plStateDataRecord)fValues[i]).Read(s, mgr);
+                    }
+                } else {
+                    for (int i = 0; i < count; i++)
+                        IReadSimpleData(s, mgr, i);
+                }
+
                 fFlags |= Flags.kUsed;
             }
         }
 
-        private void IReadData(hsStream s, hsResMgr mgr, int index) {
+        private void IReadSimpleData(hsStream s, hsResMgr mgr, int index) {
             switch (fDesc.Type) {
                 case plAtomicType.kAgeTimeOfDay:
                     // Nothing to read in...
@@ -240,15 +256,22 @@ namespace Plasma {
             }
         }
 
-        public override void Write(hsStream s, hsResMgr mgr) {
-            base.Write(s, mgr);
+        public void Write(hsStream s, hsResMgr mgr) {
+            if (fHint == null)
+                s.WriteByte(0);
+            else {
+                s.WriteByte((byte)plSDL.ContentsFlags.kHasNotificationInfo);
+                plStateVarNotificationInfo.Write(s, fHint);
+            }
 
             // Stupid, stupid, stupid.
             plSDL.ContentsFlags savFlags = 0;
-            if (fModified != plUnifiedTime.Epoch)
-                savFlags |= plSDL.ContentsFlags.kHasTimeStamp;
-            if (!Used)
-                savFlags |= plSDL.ContentsFlags.kSameAsDefault;
+            if (!fDesc.IsStateDesc) {
+                if (fModified != plUnifiedTime.Epoch)
+                    savFlags |= plSDL.ContentsFlags.kHasTimeStamp;
+                if (!Used)
+                    savFlags |= plSDL.ContentsFlags.kSameAsDefault;
+            }
             s.WriteByte((byte)savFlags);
 
             if (savFlags.HasFlag(plSDL.ContentsFlags.kHasTimeStamp))
@@ -257,14 +280,35 @@ namespace Plasma {
             if (Used) {
                 if (fDesc.VariableLength)
                     s.WriteInt(fValues.Count);
-                for (int i = 0; i < fValues.Count; i++)
-                    IWriteData(s, mgr, i);
+
+                if (fDesc.IsStateDesc) {
+                    // More hacks...
+                    List<int> recs = new List<int>();
+                    recs.Capacity = fValues.Count;
+                    for (int i = 0; i < fValues.Count; i++)
+                        if (((plStateDataRecord)fValues[i]).Used)
+                            recs.Add(i);
+
+                    int varsize; unchecked { varsize = fDesc.VariableLength ? (int)0xFFFFFFFF : fDesc.Count; }
+                    bool all = (recs.Count == fValues.Count);
+                    plSDL.VariableLengthWrite(s, varsize, recs.Count);
+
+                    for (int i = 0; i < recs.Count; i++) {
+                        int varID = recs[i];
+                        if (!all)
+                            plSDL.VariableLengthWrite(s, varsize, varID);
+                        ((plStateDataRecord)fValues[varID]).Write(s, mgr);
+                    }
+                } else {
+                    for (int i = 0; i < fValues.Count; i++)
+                        IWriteSimpleData(s, mgr, i);
+                }
             }
 
             fFlags &= ~Flags.kDirty;
         }
 
-        private void IWriteData(hsStream s, hsResMgr mgr, int index) {
+        private void IWriteSimpleData(hsStream s, hsResMgr mgr, int index) {
             switch (fDesc.Type) {
                 case plAtomicType.kAgeTimeOfDay:
                     // Nothing to write
@@ -340,123 +384,6 @@ namespace Plasma {
                     break;
                 default:
                     throw new NotSupportedException();
-            }
-        }
-    }
-
-    public class plSDStateVariable : plStateVariable, IEnumerable<plStateDataRecord> {
-
-        plSDVarDescriptor fDesc;
-        List<plStateDataRecord> fRecords = new List<plStateDataRecord>();
-
-        public plStateDataRecord this[int index] {
-            get { return fRecords[index]; }
-            set {
-                if (!fDesc.VariableLength && fRecords.Count < index)
-                    throw new IndexOutOfRangeException();
-                else if (fDesc.VariableLength && fRecords.Count < index)
-                    fRecords.Insert(index, value);
-                else
-                    fRecords[index] = value;
-            }
-        }
-
-        public override plVarDescriptor Descriptor {
-            get { return fDesc; }
-        }
-
-        public override bool Dirty {
-            get {
-                foreach (plStateDataRecord rec in fRecords)
-                    if (rec.Dirty) return true;
-                return false;
-            }
-        }
-
-        public override bool Used {
-            get {
-                foreach (plStateDataRecord rec in fRecords)
-                    if (rec.Used) return true;
-                return false;
-            }
-        }
-
-        internal plSDStateVariable(plSDVarDescriptor desc) {
-            fDesc = desc;
-
-            // Updates the Version field
-            plSDLMgr.FindDescriptor(desc);
-        }
-
-        #region IEnumerable
-        public IEnumerator<plStateDataRecord> GetEnumerator() {
-            return fRecords.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() {
-            return fRecords.GetEnumerator();
-        }
-        #endregion
-
-        public override void Read(hsStream s, hsResMgr mgr) {
-            base.Read(s, mgr);
-            s.ReadByte(); // saveFlags--Garbage here
-
-            int count = fDesc.Count;
-            if (fDesc.VariableLength)
-                count = s.ReadInt();
-            fRecords.Clear();
-            fRecords.Capacity = count; // Optimization
-
-            // Cyan's trick to prevent sending unused data records
-            int varsize; unchecked { varsize = fDesc.VariableLength ? (int)0xFFFFFFFF : count; }
-            int used = plSDL.VariableLengthRead(s, varsize);
-            bool all = (used == count);
-
-            // Look up the State Descriptor... We need to supply this to the
-            // State Data Record ourselves because there is no embedded header
-            plStateDescriptor desc = plSDLMgr.FindDescriptor(fDesc);
-            for (int i = 0; i < count; i++) {
-                fRecords.Insert(i, new plStateDataRecord());
-                fRecords[i].Descriptor = desc;
-            }
-
-            // Now actually read them in
-            for (int i = 0; i < used; i++) {
-                int index = i;
-                if (!all)
-                    index = plSDL.VariableLengthRead(s, varsize);
-                fRecords[index].Read(s, mgr);
-            }
-        }
-
-        public override void Write(hsStream s, hsResMgr mgr) {
-            base.Write(s, mgr);
-            s.WriteByte(0);
-
-            // Variable length hack
-            int count = fDesc.Count;
-            if (fDesc.VariableLength) {
-                count = fRecords.Count;
-                s.WriteInt(count);
-            }
-
-            // More hacks...
-            List<int> recs = new List<int>();
-            recs.Capacity = fRecords.Count;
-            for (int i = 0; i < fRecords.Count; i++)
-                if (fRecords[i].Used)
-                    recs.Add(i);
-
-            int varsize; unchecked { varsize = fDesc.VariableLength ? (int)0xFFFFFFFF : count; }
-            bool all = (recs.Count == fRecords.Count);
-            plSDL.VariableLengthWrite(s, varsize, recs.Count);
-
-            for (int i = 0; i < recs.Count; i++) {
-                int varID = recs[i];
-                if (!all)
-                    plSDL.VariableLengthWrite(s, varsize, varID);
-                fRecords[varID].Write(s, mgr);
             }
         }
     }

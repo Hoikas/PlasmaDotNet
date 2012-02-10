@@ -71,12 +71,7 @@ namespace Plasma {
 
                         string type = toks.NextToken();
                         string varName = toks.NextToken();
-
-                        plVarDescriptor var = null;
-                        if (type.StartsWith("$"))
-                            var = new plSDVarDescriptor(varName, type.Substring(1));
-                        else
-                            var = new plSimpleVarDescriptor(varName, type);
+                        plVarDescriptor var = new plVarDescriptor(varName, type);
 
                         // Optional tokens
                         for (string next = toks.Peek(); next.ToUpper() != "VAR" && next != "}"; next = toks.Peek()) {
@@ -96,8 +91,8 @@ namespace Plasma {
                                 string def = next.Substring(8);
                                 if (def.StartsWith("("))
                                     def = def.Substring(1).Substring(0, def.Length - 2);
-                                if (var is plSimpleVarDescriptor)
-                                    ((plSimpleVarDescriptor)var).Default = def;
+                                if (!var.IsStateDesc)
+                                    var.Default = def;
                                 else
                                     throw new plSDLException("SDVarDescriptors do not support default values", new NotSupportedException());
                             } else if (next.ToUpper().StartsWith("DEFAULTOPTION")) {

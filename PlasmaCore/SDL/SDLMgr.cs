@@ -67,7 +67,7 @@ namespace Plasma {
             return buf;
         }
 
-        public static plStateDescriptor FindDescriptor(plSDVarDescriptor sd) {
+        public static plStateDescriptor FindDescriptor(plVarDescriptor sd) {
             if (sd.Version == -1) {
                 plStateDescriptor match = null;
                 foreach (plStateDescriptor desc in fDescriptors)

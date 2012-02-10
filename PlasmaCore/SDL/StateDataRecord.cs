@@ -5,22 +5,21 @@ using System.Linq;
 using System.Text;
 
 namespace Plasma {
-    public class plStateDataRecord : plCreatable, ICloneable,
-        IEnumerable<plStateVariable>, IEnumerable<plSimpleStateVariable>, IEnumerable<plSDStateVariable> {
+    public class plStateDataRecord : plCreatable, ICloneable, IEnumerable<plStateVariable> {
 
         private const byte kIoVersion = 6;
 
         plStateDescriptor fDesc;
         plKey fUoid;
-        List<plSimpleStateVariable> fSimpleVars = new List<plSimpleStateVariable>();
-        List<plSDStateVariable> fSDVars = new List<plSDStateVariable>();
+        List<plStateVariable> fSimpleVars = new List<plStateVariable>();
+        List<plStateVariable> fSDVars = new List<plStateVariable>();
 
         public plStateVariable this[string key] {
             get {
-                foreach (plSimpleStateVariable v in fSimpleVars)
+                foreach (plStateVariable v in fSimpleVars)
                     if (v.Descriptor.Name == key)
                         return v;
-                foreach (plSDStateVariable v in fSDVars)
+                foreach (plStateVariable v in fSDVars)
                     if (v.Descriptor.Name == key)
                         return v;
                 throw new ArgumentException("key");
@@ -39,19 +38,19 @@ namespace Plasma {
 
                 for (int i = 0; i < value.Variables.Count; i++) {
                     plVarDescriptor desc = value.Variables[i];
-                    if (desc is plSimpleVarDescriptor)
-                        fSimpleVars.Add(new plSimpleStateVariable((plSimpleVarDescriptor)desc));
+                    if (desc.IsStateDesc)
+                        fSDVars.Add(new plStateVariable(desc));
                     else
-                        fSDVars.Add(new plSDStateVariable((plSDVarDescriptor)desc));
+                        fSimpleVars.Add(new plStateVariable(desc));
                 }
             }
         }
 
         public bool Dirty {
             get {
-                foreach (plSimpleStateVariable v in fSimpleVars)
+                foreach (plStateVariable v in fSimpleVars)
                     if (v.Dirty) return true;
-                foreach (plSDStateVariable v in fSDVars)
+                foreach (plStateVariable v in fSDVars)
                     if (v.Dirty) return true;
                 return false;
             }
@@ -59,9 +58,9 @@ namespace Plasma {
 
         public bool Used {
             get {
-                foreach (plSimpleStateVariable v in fSimpleVars)
+                foreach (plStateVariable v in fSimpleVars)
                     if (v.Used) return true;
-                foreach (plSDStateVariable v in fSDVars)
+                foreach (plStateVariable v in fSDVars)
                     if (v.Used) return true;
                 return false;
             }
@@ -82,26 +81,18 @@ namespace Plasma {
             // Return the list in the same order as the SDL file :)
             List<plStateVariable> list = new List<plStateVariable>();
             foreach (plVarDescriptor desc in fDesc.Variables) {
-                if (desc is plSDVarDescriptor) {
-                    foreach (plSDStateVariable sd in fSDVars)
+                if (desc.IsStateDesc) {
+                    foreach (plStateVariable sd in fSDVars)
                         if (sd.Descriptor == desc)
                             list.Add(sd);
                 } else {
-                    foreach (plSimpleStateVariable sv in fSimpleVars)
+                    foreach (plStateVariable sv in fSimpleVars)
                         if (sv.Descriptor == desc)
                             list.Add(sv);
                 }
             }
 
             return list.GetEnumerator();
-        }
-
-        IEnumerator<plSDStateVariable> IEnumerable<plSDStateVariable>.GetEnumerator() {
-            return fSDVars.GetEnumerator();
-        }
-
-        IEnumerator<plSimpleStateVariable> IEnumerable<plSimpleStateVariable>.GetEnumerator() {
-            return fSimpleVars.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

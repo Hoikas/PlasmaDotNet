@@ -51,13 +51,8 @@ namespace Plasma {
             short count = s.ReadShort();
             fVariables.Capacity = count; // Optimization
             for (short i = 0; i < count; i++) {
-                plVarDescriptor var = null;
-
-                bool isSD = s.ReadBool();
-                if (isSD)
-                    var = new plSDVarDescriptor();
-                else
-                    var = new plSimpleVarDescriptor();
+                plVarDescriptor var = new plVarDescriptor(s.ReadBool() 
+                    ? plAtomicType.kStateDescriptor : plAtomicType.kNone);
                 var.Read(s);
                 fVariables.Add(var);
             }
@@ -95,7 +90,7 @@ namespace Plasma {
         kRGBA8,         // atomicCount=4
     }
 
-    public abstract class plVarDescriptor {
+    public class plVarDescriptor {
 
         [Flags]
         enum Flags {
@@ -106,12 +101,23 @@ namespace Plasma {
 
         private const byte kIoVersion = 3;
 
+        // VarDescriptor
         Flags fFlags;
         string fName;
         int fCount; // As specified by the SDL file
         protected plAtomicType fType = plAtomicType.kNone; // As specified by the SDL file
         string fDisplayOptions;
 
+        // SimpleVar -- unused unless fType != kStateDescriptor
+        plAtomicType fAtomicType;
+        int fAtomicCount = 1;
+        object fDefaultValue;
+
+        // StateDescriptor -- unused unless fType == kStateDescriptor
+        string fDescName;
+        int fVersion;
+
+        #region Base Properties
         public bool AlwaysNew {
             get { return fFlags.HasFlag(Flags.kAlwaysNew); }
             set {
@@ -124,11 +130,6 @@ namespace Plasma {
 
         public int Count {
             get { return fCount; }
-        }
-
-        public abstract string Default {
-            get;
-            set;
         }
 
         /// <summary>
@@ -161,59 +162,34 @@ namespace Plasma {
                     fFlags &= ~Flags.kVariableLength;
             }
         }
+        #endregion
 
-        protected plVarDescriptor() { }
-        protected plVarDescriptor(string name) {
-            if (name.EndsWith("[]")) {
-                VariableLength = true;
-                fName = name.Replace("[]", null);
-            } else {
-                string[] hack = name.Split(new char[] { '[' });
-                hack[1] = hack[1].Replace("]", null);
-                fName = hack[0];
-                fCount = Convert.ToInt32(hack[1]);
-            }
-        }
-
-        public virtual void Read(hsStream s) {
-            if (s.ReadByte() != kIoVersion)
-                throw new NotSupportedException("Bad VarDescriptor IO Version");
-
-            fName = s.ReadSafeString();
-            string displayOptions = s.ReadStdString(); // TODO
-            fCount = s.ReadInt();
-            fType = (plAtomicType)s.ReadByte();
-            Default = s.ReadSafeString();
-            fFlags = (Flags)s.ReadInt();
-        }
-
-        public virtual void Write(hsStream s) {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class plSimpleVarDescriptor : plVarDescriptor {
-
-        plAtomicType fAtomicType;
-        int fAtomicCount = 1;
-        object fDefaultValue;
-
+        #region SimpleVar Properties
         /// <summary>
         /// Gets or sets an string representation of the default value, formatted
         /// for an SDL file
         /// </summary>
-        public override string Default {
-            get { throw new NotImplementedException(); }
+        public object Default {
+            get { return fDefaultValue; }
             set {
+                // This is kind of hacky... If we're passing in something that isn't a string
+                // OR this is a String32, then just assign it directly to fDefaultValue. Otherwise,
+                // we continue through the crazy stuff below.
+                if (!(value is string) || fType == plAtomicType.kString32) {
+                    fDefaultValue = value;
+                    return;
+                }
+
                 string[] split = null;
+                string str = value.ToString();
                 if (fAtomicCount > 1)
-                    split = value.Split(new char[] { ',' });
+                    split = str.Split(new char[] { ',' });
 
                 switch (fType) {
                     case plAtomicType.kBool:
-                        if (value == "1") // Because Convert.ToBoolean sucks
+                        if (str == "1") // Because Convert.ToBoolean sucks
                             fDefaultValue = true;
-                        else if (value == "0")
+                        else if (str == "0")
                             fDefaultValue = false;
                         else
                             fDefaultValue = Convert.ToBoolean(value);
@@ -231,7 +207,7 @@ namespace Plasma {
                         fDefaultValue = Convert.ToInt32(value);
                         break;
                     case plAtomicType.kKey:
-                        if (value.ToLower() != "nil")
+                        if (str.ToLower() != "nil")
                             throw new NotSupportedException("PLKEY Default Value");
                         break;
                     case plAtomicType.kPoint3:
@@ -248,7 +224,7 @@ namespace Plasma {
                             (int)(Convert.ToSingle(split[2]) * 255.0f));
                         break;
                     case plAtomicType.kRGB8:
-                        fDefaultValue = Color.FromArgb(Convert.ToInt32(split[0]), 
+                        fDefaultValue = Color.FromArgb(Convert.ToInt32(split[0]),
                             Convert.ToInt32(split[1]),
                             Convert.ToInt32(split[2]));
                         break;
@@ -262,15 +238,12 @@ namespace Plasma {
                     case plAtomicType.kRGBA8:
                         // C# likes ARGB, but Cyan uses RGBA ;)
                         fDefaultValue = Color.FromArgb(Convert.ToInt32(split[3]),
-                            Convert.ToInt32(split[0]), 
-                            Convert.ToInt32(split[1]), 
+                            Convert.ToInt32(split[0]),
+                            Convert.ToInt32(split[1]),
                             Convert.ToInt32(split[2]));
                         break;
                     case plAtomicType.kShort:
                         fDefaultValue = Convert.ToInt16(value);
-                        break;
-                    case plAtomicType.kString32:
-                        fDefaultValue = value;
                         break;
                     case plAtomicType.kTime:
                         // I *think* this is correct
@@ -285,19 +258,58 @@ namespace Plasma {
                 }
             }
         }
+        #endregion
 
-        /// <summary>
-        /// Gets the translated default value for this state variable
-        /// </summary>
-        public object DefaultValue {
-            get { return fDefaultValue; }
+        #region StateDesc Properties
+        public string Descriptor {
+            get {
+                if (!IsStateDesc)
+                    throw new NotSupportedException("Not a sub-descriptor variable");
+                return fDescName;
+            }
         }
 
-        internal plSimpleVarDescriptor() { }
+        public bool IsStateDesc {
+            // How lazy can we be?
+            get { return fType == plAtomicType.kStateDescriptor; }
+        }
 
-        internal plSimpleVarDescriptor(string name, string type) : base(name) {
+        public int Version {
+            get {
+                if (!IsStateDesc)
+                    throw new NotSupportedException("Not a sub-descriptor variable");
+                return fVersion;
+            }
+
+            internal set {
+                if (!IsStateDesc)
+                    throw new NotSupportedException("Not a sub-descriptor variable");
+                fVersion = value;
+            }
+        }
+        #endregion
+
+        private plVarDescriptor() { }
+
+        internal plVarDescriptor(plAtomicType type) {
+            fType = type;
+        }
+
+        internal plVarDescriptor(string name, string type) {
+            if (name.EndsWith("[]")) {
+                VariableLength = true;
+                fName = name.Replace("[]", null);
+            } else {
+                string[] hack = name.Split(new char[] { '[' });
+                hack[1] = hack[1].Replace("]", null);
+                fName = hack[0];
+                fCount = Convert.ToInt32(hack[1]);
+            }
+
             string itype = type.ToUpper();
-            if (itype == "VECTOR3") {
+            if (itype.StartsWith("$")) {
+                fType = plAtomicType.kStateDescriptor;
+            } else if (itype == "VECTOR3") {
                 fAtomicCount = 3;
                 fAtomicType = plAtomicType.kFloat;
                 fType = plAtomicType.kVector3;
@@ -348,51 +360,35 @@ namespace Plasma {
             else if (itype == "MESSAGE" || itype == "CREATABLE")
                 fAtomicType = plAtomicType.kCreatable;
             else
-                throw new plSDLException("Invalid SimpleVarDescriptor Type: " + type);
+                throw new plSDLException("Invalid VarDescriptor Type: " + type);
 
             if (fType == plAtomicType.kNone)
                 fType = fAtomicType;
         }
 
-        public override void Read(hsStream s) {
-            base.Read(s);
+        public virtual void Read(hsStream s) {
+            if (s.ReadByte() != kIoVersion)
+                throw new NotSupportedException("Bad VarDescriptor IO Version");
 
-            s.WriteShort((short)fAtomicCount);
-            s.WriteByte((byte)fAtomicType);
-        }
-    }
+            fName = s.ReadSafeString();
+            string displayOptions = s.ReadStdString(); // TODO
+            fCount = s.ReadInt();
+            fType = (plAtomicType)s.ReadByte();
+            Default = s.ReadSafeString();
+            fFlags = (Flags)s.ReadInt();
 
-    public class plSDVarDescriptor : plVarDescriptor {
-
-        string fDescName;
-        int fVersion = - 1;
-
-        public override string Default {
-            get { return null; }
-            set { /* Purposefully left blank */ }
-        }
-
-        public string Descriptor {
-            get { return fDescName; }
-        }
-
-        public int Version {
-            get { return fVersion; }
-            set { fVersion = value; }
+            // Derived class in Cyan's code, but this is cleaner
+            if (IsStateDesc) {
+                fDescName = s.ReadSafeString();
+                fVersion = (int)s.ReadShort();
+            } else {
+                fAtomicCount = (int)s.ReadShort();
+                fAtomicType = (plAtomicType)s.ReadByte();
+            }
         }
 
-        internal plSDVarDescriptor() { }
-
-        internal plSDVarDescriptor(string varName, string descName) : base(varName) {
-            fDescName = descName;
-            fType = plAtomicType.kStateDescriptor;
-        }
-
-        public override void Read(hsStream s) {
-            base.Read(s);
-
-            fDescName = s.ReadSafeString();
-            fVersion = (int)s.ReadShort();
+        public virtual void Write(hsStream s) {
+            throw new NotImplementedException();
         }
     }
 }
