@@ -9,7 +9,7 @@ namespace Plasma {
 
         enum ParseState { kStateDesc, kVariable, kVersion, kEnd }
 
-        public void ReadDescriptors(string path) {
+        public static void ReadDescriptors(string path) {
             // TODO: EncryptedStream support
             if (Directory.Exists(path)) {
                 foreach (string sdl in Directory.EnumerateFiles(path, "*.sdl")) {
@@ -27,13 +27,13 @@ namespace Plasma {
                 throw new FileNotFoundException(path);
         }
 
-        public void ReadDescriptors(Stream s) {
+        public static void ReadDescriptors(Stream s) {
             hsTokenStream toks = new hsTokenStream(s);
             while (toks.Available)
                 IReadDescriptor(toks);
         }
 
-        private void IReadDescriptor(hsTokenStream toks) {
+        private static void IReadDescriptor(hsTokenStream toks) {
             plStateDescriptor desc = null;
             string name = null; int version; // Temporary variables
             

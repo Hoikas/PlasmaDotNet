@@ -39,13 +39,15 @@ namespace Plasma {
 
     public partial class plSDLMgr {
 
-        List<plStateDescriptor> fDescriptors = new List<plStateDescriptor>();
+        static List<plStateDescriptor> fDescriptors = new List<plStateDescriptor>();
 
-        public List<plStateDescriptor> Descriptors {
+        public static List<plStateDescriptor> Descriptors {
             get { return fDescriptors; }
         }
 
-        public byte[] DumpStateRecord(plStateDataRecord record, hsResMgr mgr) {
+        private plSDLMgr() { throw new NotSupportedException("plSDLMgr should never be constructed"); }
+
+        public static byte[] DumpStateRecord(plStateDataRecord record, hsResMgr mgr) {
             MemoryStream ms = new MemoryStream();
             hsStream s = new hsStream(ms);
             s.Version = mgr.Version;
@@ -65,7 +67,7 @@ namespace Plasma {
             return buf;
         }
 
-        public plStateDescriptor FindDescriptor(plSDVarDescriptor sd) {
+        public static plStateDescriptor FindDescriptor(plSDVarDescriptor sd) {
             if (sd.Version == -1) {
                 plStateDescriptor match = null;
                 foreach (plStateDescriptor desc in fDescriptors)
@@ -84,12 +86,12 @@ namespace Plasma {
             return null;
         }
 
-        public plStateDataRecord ParseStateRecord(byte[] record, hsResMgr mgr) {
+        public static plStateDataRecord ParseStateRecord(byte[] record, hsResMgr mgr) {
             MemoryStream ms = new MemoryStream(record);
             hsStream s = new hsStream(ms);
             s.Version = mgr.Version;
 
-            plStateDataRecord result = new plStateDataRecord(this);
+            plStateDataRecord result = new plStateDataRecord();
             try {
                 result.ReadStreamHeader(s, mgr);
                 result.Read(s, mgr);
@@ -105,7 +107,7 @@ namespace Plasma {
             return result;
         }
 
-        public void Read(hsStream s) {
+        public static void Read(hsStream s) {
             short count = s.ReadShort();
             fDescriptors.Capacity = (int)count; // Optimization
 

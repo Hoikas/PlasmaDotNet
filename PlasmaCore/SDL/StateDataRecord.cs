@@ -10,7 +10,6 @@ namespace Plasma {
 
         private const byte kIoVersion = 6;
 
-        plSDLMgr fMgr;
         plStateDescriptor fDesc;
         plKey fUoid;
         List<plSimpleStateVariable> fSimpleVars = new List<plSimpleStateVariable>();
@@ -43,7 +42,7 @@ namespace Plasma {
                     if (desc is plSimpleVarDescriptor)
                         fSimpleVars.Add(new plSimpleStateVariable((plSimpleVarDescriptor)desc));
                     else
-                        fSDVars.Add(new plSDStateVariable(fMgr, (plSDVarDescriptor)desc));
+                        fSDVars.Add(new plSDStateVariable((plSDVarDescriptor)desc));
                 }
             }
         }
@@ -68,16 +67,12 @@ namespace Plasma {
             }
         }
 
-        public plStateDataRecord(plSDLMgr mgr) {
-            fMgr = mgr;
-        }
-
         /// <summary>
         /// Creates a copy of this state record with all variables at the default state
         /// </summary>
         /// <returns>Newly created state record</returns>
         public object Clone() {
-            plStateDataRecord rec = new plStateDataRecord(fMgr);
+            plStateDataRecord rec = new plStateDataRecord();
             rec.Descriptor = fDesc;
             return rec;
         }
@@ -121,7 +116,7 @@ namespace Plasma {
             
             string name = s.ReadSafeString();
             int version = (int)s.ReadUShort();
-            foreach (plStateDescriptor desc in fMgr.Descriptors)
+            foreach (plStateDescriptor desc in plSDLMgr.Descriptors)
                 if (desc.Name == name &&
                     desc.Version == version)
                     Descriptor = desc;

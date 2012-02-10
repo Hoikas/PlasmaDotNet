@@ -347,7 +347,6 @@ namespace Plasma {
     public class plSDStateVariable : plStateVariable, IEnumerable<plStateDataRecord> {
 
         plSDVarDescriptor fDesc;
-        plSDLMgr fMgr;
         List<plStateDataRecord> fRecords = new List<plStateDataRecord>();
 
         public plStateDataRecord this[int index] {
@@ -382,12 +381,11 @@ namespace Plasma {
             }
         }
 
-        internal plSDStateVariable(plSDLMgr mgr, plSDVarDescriptor desc) {
-            fMgr = mgr;
+        internal plSDStateVariable(plSDVarDescriptor desc) {
             fDesc = desc;
 
             // Updates the Version field
-            mgr.FindDescriptor(desc);
+            plSDLMgr.FindDescriptor(desc);
         }
 
         #region IEnumerable
@@ -417,9 +415,9 @@ namespace Plasma {
 
             // Look up the State Descriptor... We need to supply this to the
             // State Data Record ourselves because there is no embedded header
-            plStateDescriptor desc = fMgr.FindDescriptor(fDesc);
+            plStateDescriptor desc = plSDLMgr.FindDescriptor(fDesc);
             for (int i = 0; i < count; i++) {
-                fRecords.Insert(i, new plStateDataRecord(fMgr));
+                fRecords.Insert(i, new plStateDataRecord());
                 fRecords[i].Descriptor = desc;
             }
 
