@@ -492,7 +492,16 @@ namespace Plasma {
 
     public sealed class pnVaultPlayerNode : pnVaultNodeAccess {
 
-        public bool Banned {
+        /// <summary>
+        /// Gets if the player has been deleted (removed from player selection list)
+        /// </summary>
+        /// <remarks>
+        /// You should exercise caution when setting this flag. Some servers, such as Cyan's, 
+        /// will actually unref the PlayerInfo node from the Player node when you set it. Obviously, 
+        /// each server will handle deletion in its own way, so it's probably best to send a delete request 
+        /// rather than marking this field.
+        /// </remarks>
+        public bool Deleted {
             get {
                 if (fBase.Int32_1.HasValue)
                     return Convert.ToBoolean(fBase.Int32_1.Value);
