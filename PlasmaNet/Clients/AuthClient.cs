@@ -21,6 +21,7 @@ namespace Plasma {
 
         public event pnAuthPlayerInfo PlayerInfo;
         public event pnAuthServerAddr ServerAddress;
+        public event pnAuthVaultNodeChanged VaultNodeChanged;
 
         private uint? fSrvChg;
         private LoginData fEvilTemporaryHack;
@@ -93,7 +94,7 @@ namespace Plasma {
             pnCli2Auth_AcctLoginRequest req = new pnCli2Auth_AcctLoginRequest();
             req.fAccount = user;
             req.fChallenge = BitConverter.ToUInt32(OpenSSL.RNG.Random(4), 0);
-            req.fHash = pnHelpers.HashLogin(user, pass, req.fChallenge, fSrvChg.Value);
+            req.fHash = pnHelpers.HashLogin(user, pass, req.fChallenge, fSrvChg.HasValue ? fSrvChg.Value : 0);
             switch (Environment.OSVersion.Platform) {
                 case PlatformID.MacOSX:
                     req.fOS = "mac";
@@ -250,6 +251,13 @@ namespace Plasma {
                 ServerAddress(notify.fAddress, notify.fToken);
         }
 
+        private void IVaultNodeChanged() {
+            pnAuth2Cli_VaultNodeChanged notify = new pnAuth2Cli_VaultNodeChanged();
+            notify.Read(fStream);
+            if (VaultNodeChanged != null)
+                VaultNodeChanged(notify.fNodeID);
+        }
+
         private void IVaultNodeFetched() {
             pnAuth2Cli_VaultNodeFetched reply = new pnAuth2Cli_VaultNodeFetched();
             reply.Read(fStream);
@@ -268,6 +276,7 @@ namespace Plasma {
     public delegate void pnAuthPlayerInfo(uint playerID, string name, string model);
     public delegate void pnAuthPlayerSet(ENetError result, object param);
     public delegate void pnAuthServerAddr(IPAddress ip, Guid token);
+    public delegate void pnAuthVaultNodeChanged(uint nodeID);
     public delegate void pnAuthVaultNodeFetched(ENetError result, pnVaultNode node, object param);
     public delegate void pnAuthVaultNodeRefsFetched(ENetError result, pnVaultNodeRef[] refs, object param);
 }
