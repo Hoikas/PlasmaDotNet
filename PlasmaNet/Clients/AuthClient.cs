@@ -76,7 +76,7 @@ namespace Plasma {
             // First, we must register with the server and get a server challenge
             // Then, we actually login.
             // We will make it easy on the programmer and silently register the client :)
-            if (fSrvChg.HasValue)
+            if (fSrvChg.HasValue || !user.Contains('@'))
                 ILogin(user, pass, cb);
             else {
                 // Unfortunately, RegisterRequests have no TransID, so we can't save our
