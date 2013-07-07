@@ -12,8 +12,7 @@ namespace Plasma {
     public abstract class plNetClient {
 
         protected plBufferedStream fStream;
-        protected Socket fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        private SocketAsyncEventArgs fSocketArgs = new SocketAsyncEventArgs();
+        protected Socket fSocket;
         protected pnCli2Srv_Connect fConnHdr = new pnCli2Srv_Connect();
 
         protected IPAddress fHost;
@@ -76,7 +75,11 @@ namespace Plasma {
         /// Gets whether or not the socket is currently connected
         /// </summary>
         public bool SocketConnected {
-            get { return fSocket.Connected; }
+            get {
+                if (fSocket != null)
+                    return fSocket.Connected;
+                return false;
+            }
         }
 
         /// <summary>
@@ -92,50 +95,56 @@ namespace Plasma {
             set { fConnHdr.fProtocolVer = value; }
         }
 
-        public plNetClient() {
-            fSocketArgs.SetBuffer(new byte[0], 0, 0);
+        private void ICreateSocket() {
+            fSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             fSocket.NoDelay = true; // Match Cyan.
         }
 
         public void ConnectAsync() {
-            // Cache the callback so we can pop it off later
-            fSocketArgs.UserToken = new EventHandler<SocketAsyncEventArgs>(IOnConnect);
-            fSocketArgs.Completed += (EventHandler<SocketAsyncEventArgs>)fSocketArgs.UserToken;
-            fSocketArgs.RemoteEndPoint = new IPEndPoint(fHost, fPort);
-
-            if (!fSocket.ConnectAsync(fSocketArgs)) {
-                fSocketArgs.Completed -= (EventHandler<SocketAsyncEventArgs>)fSocketArgs.UserToken;
-                IOnConnect();
-                if (Connected != null)
-                    Connected();
-            }
+            ICreateSocket();
+            fSocket.BeginConnect(fHost, fPort, new AsyncCallback(IOnConnect), fSocket);
         }
 
         public void ConnectSync() {
+            ICreateSocket();
             fSocket.Connect(fHost, fPort);
             IOnConnect();
-            if (Connected != null)
-                Connected();
         }
 
-        private void IOnConnect(object sender, SocketAsyncEventArgs e) {
-            e.Completed -= (EventHandler<SocketAsyncEventArgs>)e.UserToken;
+        private void IOnConnect(IAsyncResult ar) {
+            try {
+                ((Socket)ar.AsyncState).EndConnect(ar);
+            } catch (ObjectDisposedException) {
+                IDisconnected();
+                return;
+            } catch (SocketException) {
+                IDisconnected();
+                return;
+            }
+
             IOnConnect();
-            if (Connected != null)
-                Connected();
         }
 
         protected virtual void IOnConnect() {
-            fSocketArgs.Completed += new EventHandler<SocketAsyncEventArgs>(IReceive);
+            if (Connected != null)
+                Connected();
             IReceive();
         }
 
         public void Close() {
-            if (fStream != null) fStream.Close();
-            fSocket.Shutdown(SocketShutdown.Both); // Be nice
-            fSocket.Close();
+            if (fStream != null) {
+                lock (fStream) {
+                    fStream.Close();
+                    fStream = null;
+                }
+            }
+            if (fSocket != null) {
+                if (fSocket.Connected)
+                    fSocket.Shutdown(SocketShutdown.Both); // Be nice
+                fSocket.Close();
+                fSocket = null;
+            }
             fCallbacks.Clear();
-            IDisconnected();
         }
 
         protected void IDisconnected() {
@@ -170,12 +179,19 @@ namespace Plasma {
         }
 
         protected void IReceive() {
-            if (!fSocket.ReceiveAsync(fSocketArgs))
-                OnReceive();
+            if (fSocket != null)
+                fSocket.BeginReceive(new byte[2], 0, 2, SocketFlags.Peek, new AsyncCallback(IReceive), fSocket);
         }
 
-        private void IReceive(object sender, SocketAsyncEventArgs args) {
-            OnReceive();
+        private void IReceive(IAsyncResult ar) {
+            try {
+                ((Socket)ar.AsyncState).EndReceive(ar);
+                OnReceive();
+            } catch (ObjectDisposedException) {
+                IDisconnected();
+            } catch (SocketException) {
+                IDisconnected();
+            }
         }
 
         protected abstract void OnReceive();
