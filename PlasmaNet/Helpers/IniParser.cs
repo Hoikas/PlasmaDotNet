@@ -22,11 +22,11 @@ namespace Plasma {
             Populate(s);
         }
 
-        public Guid GetGuid(string index) {
+        public Guid GetGuid(string index, Guid def=new Guid()) {
             if (fValues.ContainsKey(index.ToLower()))
                 return new Guid(fValues[index.ToLower()]);
             else
-                return Guid.Empty;
+                return def;
         }
 
         public int? GetInteger(string index) {
