@@ -38,9 +38,7 @@ namespace OpenSSL {
             if (fDisposed) throw new ObjectDisposedException("fKey");
 
             GC.SuppressFinalize(this);
-            try {
-                OpenSSL.CRYPTO_free(fKey);
-            } catch (AccessViolationException) { }
+            Marshal.FreeHGlobal(fKey);
             fDisposed = true;
         }
 
