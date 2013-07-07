@@ -309,6 +309,8 @@ namespace Plasma {
             string itype = type.ToUpper();
             if (itype.StartsWith("$")) {
                 fType = plAtomicType.kStateDescriptor;
+                fDescName = type.Substring(1);
+                fVersion = -1;
             } else if (itype == "VECTOR3") {
                 fAtomicCount = 3;
                 fAtomicType = plAtomicType.kFloat;
