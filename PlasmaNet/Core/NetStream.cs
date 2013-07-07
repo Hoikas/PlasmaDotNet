@@ -50,9 +50,9 @@ namespace Plasma {
         public override int Read(byte[] buffer, int offset, int count) {
             // Receive data from the socket
             byte[] recv = new byte[count];
-            if (fSocket.Receive(recv) != count)
-                throw new EndOfStreamException("Socket read returned less data than requested");
-            
+            for (int i = 0; i < count; )
+                i += fSocket.Receive(recv, i, count - i, SocketFlags.None);
+
             // Decrypt and do some finalization
             if (fRead != null) {
                 byte[] temp = fRead.Transform(recv);
