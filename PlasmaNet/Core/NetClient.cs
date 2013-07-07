@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using OpenSSL;
+using Timer = System.Timers.Timer;
 
 namespace Plasma {
     public abstract class plNetClient {
@@ -21,6 +22,7 @@ namespace Plasma {
         private byte[] fN;
         private byte[] fX;
 
+        protected Timer fPingTimer = new Timer(30 * 1000);
         protected Dictionary<uint, pnCallback> fCallbacks = new Dictionary<uint, pnCallback>();
         private uint fTransID = 0;
 
@@ -129,6 +131,7 @@ namespace Plasma {
             if (Connected != null)
                 Connected();
             IReceive();
+            fPingTimer.Start();
         }
 
         public void Close() {
@@ -148,6 +151,8 @@ namespace Plasma {
         }
 
         protected void IDisconnected() {
+            fPingTimer.Stop();
+            Close();
             if (Disconnected != null)
                 Disconnected();
         }

@@ -27,6 +27,7 @@ namespace Plasma {
 
         public pnAuthClient() : base() {
             fConnHdr.fType = ENetProtocol.kConnTypeCliToAuth;
+            fPingTimer.Elapsed += (object s, System.Timers.ElapsedEventArgs args) => Ping((uint)args.SignalTime.Ticks);
         }
 
         protected override void IOnConnect() {
