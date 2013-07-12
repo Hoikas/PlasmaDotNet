@@ -58,13 +58,7 @@ namespace Plasma {
                 else 
                     return plUnifiedTime.Epoch;
             }
-
-            set {
-                if (fCreateTime.HasValue)
-                    throw new NotSupportedException("You cannot change this value!");
-                else
-                    fCreateTime = value;
-            }
+            set { fCreateTime = value; }
         }
 
         /// <summary>
@@ -77,13 +71,7 @@ namespace Plasma {
                 else
                     return plUnifiedTime.Epoch;
             }
-
-            set { 
-                // Sorry Gage, but I can't let you do that...
-                // Unfortunately, time travel technology not yet been invented.
-                if (fModifyTime < value)
-                    fModifyTime = value; 
-            }
+            set { fModifyTime = value; }
         }
 
         /// <summary>
