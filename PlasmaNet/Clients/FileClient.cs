@@ -44,38 +44,24 @@ namespace Plasma {
         }
 
         protected override void OnReceive() {
-            try {
-                lock (fStream) {
-                    int size = fStream.ReadInt();
-                    pnFile2Cli msgID = (pnFile2Cli)fStream.ReadUInt();
+            lock (fStream) {
+                int size = fStream.ReadInt();
+                pnFile2Cli msgID = (pnFile2Cli)fStream.ReadUInt();
 
-                    switch (msgID) {
-                        case pnFile2Cli.kFile2Cli_BuildIdReply:
-                            IBuildIdReply();
-                            break;
-                        case pnFile2Cli.kFile2Cli_PingReply:
-                            IPingReply();
-                            break;
-                        default:
-                            // Yay, we can just throw away messages we don't understand!
-                            fStream.ReadBytes(size - 8);
-                            break;
-                    }
-
-                    IReceive();
+                switch (msgID) {
+                    case pnFile2Cli.kFile2Cli_BuildIdReply:
+                        IBuildIdReply();
+                        break;
+                    case pnFile2Cli.kFile2Cli_PingReply:
+                        IPingReply();
+                        break;
+                    default:
+                        // Yay, we can just throw away messages we don't understand!
+                        fStream.ReadBytes(size - 8);
+                        break;
                 }
-            } catch (EndOfStreamException) {
-                // Disconnected in a strange way
-                IDisconnected();
-                return;
-            } catch (SocketException) {
-                // Connection Reset OR something weird happened
-                IDisconnected();
-                return;
-            } catch (ObjectDisposedException) {
-                // The socket was closed.
-                IDisconnected();
-                return;
+
+                IReceive();
             }
         }
 

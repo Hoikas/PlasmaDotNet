@@ -72,42 +72,28 @@ namespace Plasma {
         }
 
         protected override void OnReceive() {
-            try {
-                lock (fStream) {
-                    pnGate2Cli msgID = (pnGate2Cli)fStream.ReadUShort();
-                    switch (msgID) {
-                        case pnGate2Cli.kGateKeeper2Cli_AuthSrvIpAddressReply:
-                            IAuthSrvIpReply();
-                            break;
-                        case pnGate2Cli.kGateKeeper2Cli_FileSrvIpAddressReply:
-                            IFileSrvIpReply();
-                            break;
-                        case pnGate2Cli.kGateKeeper2Cli_PingReply:
-                            IPingReply();
-                            break;
-                        default:
+            lock (fStream) {
+                pnGate2Cli msgID = (pnGate2Cli)fStream.ReadUShort();
+                switch (msgID) {
+                    case pnGate2Cli.kGateKeeper2Cli_AuthSrvIpAddressReply:
+                        IAuthSrvIpReply();
+                        break;
+                    case pnGate2Cli.kGateKeeper2Cli_FileSrvIpAddressReply:
+                        IFileSrvIpReply();
+                        break;
+                    case pnGate2Cli.kGateKeeper2Cli_PingReply:
+                        IPingReply();
+                        break;
+                    default:
 #if DEBUG
-                            throw new NotSupportedException();
+                        throw new NotSupportedException();
 #endif
-                            Close();
-                            break;
-                    }
+                        Close();
+                        break;
                 }
-
-                IReceive();
-            } catch (EndOfStreamException) {
-                // Disconnected in a strange way
-                IDisconnected();
-                return;
-            } catch (SocketException) {
-                // Connection Reset OR something weird happened
-                IDisconnected();
-                return;
-            } catch (ObjectDisposedException) {
-                // The socket was closed.
-                IDisconnected();
-                return;
             }
+
+            IReceive();
         }
 
         private void IAuthSrvIpReply() {

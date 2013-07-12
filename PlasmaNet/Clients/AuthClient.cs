@@ -150,57 +150,46 @@ namespace Plasma {
         }
 
         protected override void OnReceive() {
-            try {
-                lock (fStream) {
-                    pnAuth2Cli msgID = (pnAuth2Cli)fStream.ReadUShort();
-                    switch (msgID) {
-                        case pnAuth2Cli.kAuth2Cli_AcctLoginReply:
-                            ILoginReply();
-                            break;
-                        case pnAuth2Cli.kAuth2Cli_AcctPlayerInfo:
-                            IPlayerInfo();
-                            break;
-                        case pnAuth2Cli.kAuth2Cli_AcctSetPlayerReply:
-                            IPlayerSet();
-                            break;
-                        case pnAuth2Cli.kAuth2Cli_ClientRegisterReply:
-                            IClientRegistered();
-                            break;
-                        case pnAuth2Cli.kAuth2Cli_PingReply:
-                            IPingReply();
-                            break;
-                        case pnAuth2Cli.kAuth2Cli_ServerAddr:
-                            IServerAddr();
-                            break;
-                        case pnAuth2Cli.kAuth2Cli_VaultNodeFetched:
-                            IVaultNodeFetched();
-                            break;
-                        case pnAuth2Cli.kAuth2Cli_VaultNodeRefsFetched:
-                            IVaultNodeRefsFetched();
-                            break;
-                        default:
+            lock (fStream) {
+                pnAuth2Cli msgID = (pnAuth2Cli)fStream.ReadUShort();
+                switch (msgID) {
+                    case pnAuth2Cli.kAuth2Cli_AcctLoginReply:
+                        ILoginReply();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_AcctPlayerInfo:
+                        IPlayerInfo();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_AcctSetPlayerReply:
+                        IPlayerSet();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_ClientRegisterReply:
+                        IClientRegistered();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_PingReply:
+                        IPingReply();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_ServerAddr:
+                        IServerAddr();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_VaultNodeChanged:
+                        IVaultNodeChanged();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_VaultNodeFetched:
+                        IVaultNodeFetched();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_VaultNodeRefsFetched:
+                        IVaultNodeRefsFetched();
+                        break;
+                    default:
 #if DEBUG
-                            throw new NotSupportedException();
+                        throw new NotSupportedException();
 #endif
-                            Close();
-                            break;
-                    }
+                        Close();
+                        break;
                 }
-
-                IReceive();
-            } catch (EndOfStreamException) {
-                // Disconnected in a strange way
-                IDisconnected();
-                return;
-            } catch (SocketException) {
-                // Connection Reset OR something weird happened
-                IDisconnected();
-                return;
-            } catch (ObjectDisposedException) {
-                // The socket was closed.
-                IDisconnected();
-                return;
             }
+
+            IReceive();
         }
 
         private void IClientRegistered() {
