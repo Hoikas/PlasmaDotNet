@@ -282,7 +282,7 @@ namespace Plasma {
     }
 
     public sealed class pnVaultImageNode : pnVaultNodeAccess {
-        public enum ImgType { kNone, kJPEG }
+        public enum ImgType { kNone, kJPEG, kPNG }
 
         public ImgType ImageType {
             get {
@@ -309,9 +309,10 @@ namespace Plasma {
             }
             
             set {
-                if (value == null)
-                    fBase.Blob_1 = null;
-                else {
+                if (value == null) {
+                    ImageType = ImgType.kNone;
+                    fBase.Blob_1 = BitConverter.GetBytes(4);
+                } else {
                     // Prepend the 4 byte length :(
                     byte[] eapSucks = new byte[value.Length + 4];
                     Buffer.BlockCopy(BitConverter.GetBytes(eapSucks.Length), 0, eapSucks, 0, 4);
