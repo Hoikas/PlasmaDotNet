@@ -244,6 +244,59 @@ namespace Plasma {
         }
     }
 
+    public class pnCli2Auth_VaultNodeAdd : plNetStruct {
+        public uint fTransID;
+        public uint fParentID;
+        public uint fChildID;
+        public uint fSaverID;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Auth.kCli2Auth_VaultNodeAdd; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fParentID = s.ReadUInt();
+            fChildID = s.ReadUInt();
+            fSaverID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUInt(fParentID);
+            s.WriteUInt(fChildID);
+            s.WriteUInt(fSaverID);
+        }
+    }
+
+    public class pnCli2Auth_VaultNodeCreate : plNetStruct {
+        public uint fTransID;
+        public pnVaultNode fNode;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Auth.kCli2Auth_VaultNodeCreate; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            if (s.ReadInt() != 0) {
+                fNode = new pnVaultNode();
+                fNode.Read(s);
+            }
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            if (fNode == null) {
+                s.WriteInt(0);
+            } else {
+                byte[] buf = fNode.ToArray();
+                s.WriteInt(buf.Length);
+                s.WriteBytes(buf);
+            }
+        }
+    }
+
     public class pnCli2Auth_VaultNodeFetch : plNetStruct {
         public uint fTransID;
         public uint fNodeID;

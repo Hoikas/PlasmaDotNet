@@ -268,6 +268,47 @@ namespace Plasma {
         }
     }
 
+    public class pnAuth2Cli_VaultAddNodeReply : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultAddNodeReply; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+        }
+    }
+
+    public class pnAuth2Cli_VaultNodeAdded : plNetStruct {
+        public uint fParentID;
+        public uint fChildID;
+        public uint fSaverID;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultNodeAdded; }
+        }
+
+        public override void Read(hsStream s) {
+            fParentID = s.ReadUInt();
+            fChildID = s.ReadUInt();
+            fSaverID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fParentID);
+            s.WriteUInt(fChildID);
+            s.WriteUInt(fSaverID);
+        }
+    }
+
     public class pnAuth2Cli_VaultNodeChanged : plNetStruct {
         public uint fNodeID;
         public Guid fRevision;
@@ -284,6 +325,28 @@ namespace Plasma {
         public override void Write(hsStream s) {
             s.WriteUInt(fNodeID);
             pnHelpers.WriteUuid(s, fRevision);
+        }
+    }
+
+    public class pnAuth2Cli_VaultNodeCreated : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+        public uint fNodeID;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultNodeCreated; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+            fNodeID = s.ReadUInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            s.WriteUInt(fNodeID);
         }
     }
 

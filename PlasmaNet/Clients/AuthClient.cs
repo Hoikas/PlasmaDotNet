@@ -21,6 +21,7 @@ namespace Plasma {
 
         public event pnAuthPlayerInfo PlayerInfo;
         public event pnAuthServerAddr ServerAddress;
+        public event pnAuthVaultNodeAdded VaultNodeAdded;
         public event pnAuthVaultNodeChanged VaultNodeChanged;
 
         private uint? fSrvChg;
@@ -47,6 +48,20 @@ namespace Plasma {
             base.IOnConnect();
         }
 
+        public void AddVaultNode(uint parentID, uint childID, uint saverID, pnCallback cb = null) {
+            pnCli2Auth_VaultNodeAdd req = new pnCli2Auth_VaultNodeAdd();
+            req.fChildID = childID;
+            req.fParentID = parentID;
+            req.fSaverID = saverID;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
         public void FetchVaultNode(uint nodeID, pnCallback cb = null) {
             pnCli2Auth_VaultNodeFetch req = new pnCli2Auth_VaultNodeFetch();
             req.fNodeID = nodeID;
@@ -62,6 +77,18 @@ namespace Plasma {
         public void FetchVaultNodeRefs(uint nodeID, pnCallback cb = null) {
             pnCli2Auth_VaultFetchNodeRefs req = new pnCli2Auth_VaultFetchNodeRefs();
             req.fNodeID = nodeID;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
+        public void CreateVaultNode(pnVaultNode node, pnCallback cb = null) {
+            pnCli2Auth_VaultNodeCreate req = new pnCli2Auth_VaultNodeCreate();
+            req.fNode = node;
             req.fTransID = GetTransID();
 
             lock (fStream) {
@@ -185,8 +212,17 @@ namespace Plasma {
                     case pnAuth2Cli.kAuth2Cli_ServerAddr:
                         IServerAddr();
                         break;
+                    case pnAuth2Cli.kAuth2Cli_VaultAddNodeReply:
+                        IVaultNodeAddReply();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_VaultNodeAdded:
+                        IVaultNodeAdded();
+                        break;
                     case pnAuth2Cli.kAuth2Cli_VaultNodeChanged:
                         IVaultNodeChanged();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_VaultNodeCreated:
+                        IVaultNodeCreated();
                         break;
                     case pnAuth2Cli.kAuth2Cli_VaultNodeFetched:
                         IVaultNodeFetched();
@@ -257,11 +293,30 @@ namespace Plasma {
                 ServerAddress(notify.fAddress, notify.fToken);
         }
 
+        private void IVaultNodeAddReply() {
+            pnAuth2Cli_VaultAddNodeReply reply = new pnAuth2Cli_VaultAddNodeReply();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, null });
+        }
+
+        private void IVaultNodeAdded() {
+            pnAuth2Cli_VaultNodeAdded notify = new pnAuth2Cli_VaultNodeAdded();
+            notify.Read(fStream);
+            if (VaultNodeAdded != null)
+                VaultNodeAdded(notify.fParentID, notify.fChildID, notify.fSaverID);
+        }
+
         private void IVaultNodeChanged() {
             pnAuth2Cli_VaultNodeChanged notify = new pnAuth2Cli_VaultNodeChanged();
             notify.Read(fStream);
             if (VaultNodeChanged != null)
                 VaultNodeChanged(notify.fNodeID);
+        }
+
+        private void IVaultNodeCreated() {
+            pnAuth2Cli_VaultNodeCreated reply = new pnAuth2Cli_VaultNodeCreated();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fNodeID, null });
         }
 
         private void IVaultNodeFetched() {
@@ -288,7 +343,10 @@ namespace Plasma {
     public delegate void pnAuthPlayerInfo(uint playerID, string name, string model);
     public delegate void pnAuthPlayerSet(ENetError result, object param);
     public delegate void pnAuthServerAddr(IPAddress ip, Guid token);
+    public delegate void pnAuthVaultNodeAdded(uint parentID, uint childID, uint saverID);
+    public delegate void pnAuthVaultNodeAddReply(ENetError result, object param);
     public delegate void pnAuthVaultNodeChanged(uint nodeID);
+    public delegate void pnAuthVaultNodeCreated(ENetError result, uint nodeID, object param);
     public delegate void pnAuthVaultNodeFetched(ENetError result, pnVaultNode node, object param);
     public delegate void pnAuthVaultNodeRefsFetched(ENetError result, pnVaultNodeRef[] refs, object param);
     public delegate void pnAuthVaultNodeSaved(ENetError result, object param);
