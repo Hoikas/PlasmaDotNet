@@ -288,6 +288,40 @@ namespace Plasma {
                 s.WriteInt(buf.Length);
                 s.WriteBytes(buf);
             }
-        } 
+        }
+    }
+
+    public class pnCli2Auth_VaultNodeSave : plNetStruct {
+        public uint fTransID;
+        public uint fNodeID;
+        public Guid fRevision;
+        public pnVaultNode fNode;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Auth.kCli2Auth_VaultNodeSave; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fNodeID = s.ReadUInt();
+            fRevision = pnHelpers.ReadUuid(s);
+            if (s.ReadInt() != 0) {
+                fNode = new pnVaultNode();
+                fNode.Read(s);
+            }
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteUInt(fNodeID);
+            pnHelpers.WriteUuid(s, fRevision);
+            if (fNode == null)
+                s.WriteInt(0);
+            else {
+                byte[] buf = fNode.ToArray();
+                s.WriteInt(buf.Length);
+                s.WriteBytes(buf);
+            }
+        }
     }
 }

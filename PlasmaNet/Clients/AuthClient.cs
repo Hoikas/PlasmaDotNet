@@ -137,6 +137,20 @@ namespace Plasma {
             }
         }
 
+        public void SaveVaultNode(pnVaultNode node, pnCallback cb = null) {
+            pnCli2Auth_VaultNodeSave req = new pnCli2Auth_VaultNodeSave();
+            req.fNode = node;
+            req.fNodeID = node.NodeID;
+            req.fRevision = Guid.NewGuid();
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
         public void SetPlayer(uint playerID, pnCallback cb = null) {
             pnCli2Auth_AcctSetPlayerRequest req = new pnCli2Auth_AcctSetPlayerRequest();
             req.fPlayerID = playerID;
@@ -179,6 +193,9 @@ namespace Plasma {
                         break;
                     case pnAuth2Cli.kAuth2Cli_VaultNodeRefsFetched:
                         IVaultNodeRefsFetched();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_VaultSaveNodeReply:
+                        IVaultNodeSaved();
                         break;
                     default:
 #if DEBUG
@@ -258,6 +275,12 @@ namespace Plasma {
             reply.Read(fStream);
             FireCallback(reply.fTransID, new object[] { reply.fResult, reply.fNodeRefs, null });
         }
+
+        private void IVaultNodeSaved() {
+            pnAuth2Cli_VaultSaveNodeReply reply = new pnAuth2Cli_VaultSaveNodeReply();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult, null });
+        }
     }
 
     public delegate void pnAuthClientRegistered(uint challenge);
@@ -268,4 +291,5 @@ namespace Plasma {
     public delegate void pnAuthVaultNodeChanged(uint nodeID);
     public delegate void pnAuthVaultNodeFetched(ENetError result, pnVaultNode node, object param);
     public delegate void pnAuthVaultNodeRefsFetched(ENetError result, pnVaultNodeRef[] refs, object param);
+    public delegate void pnAuthVaultNodeSaved(ENetError result, object param);
 }

@@ -379,4 +379,23 @@ namespace Plasma {
             }
         }
     }
+
+    public class pnAuth2Cli_VaultSaveNodeReply : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_VaultSaveNodeReply; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+        }
+    }
 }
