@@ -303,21 +303,29 @@ namespace Plasma {
         public byte[] ImageData {
             get {
                 // Extra 4 byte length :(
-                byte[] eapSucks = new byte[fBase.Blob_1.Length - 4];
-                Buffer.BlockCopy(fBase.Blob_1, 4, eapSucks, 0, eapSucks.Length);
-                return eapSucks;
+                if (ImageType == ImgType.kJPEG) {
+                    byte[] eapSucks = new byte[fBase.Blob_1.Length - 4];
+                    Buffer.BlockCopy(fBase.Blob_1, 4, eapSucks, 0, eapSucks.Length);
+                    return eapSucks;
+                } else {
+                    return fBase.Blob_1;
+                }
             }
             
             set {
                 if (value == null) {
                     ImageType = ImgType.kNone;
-                    fBase.Blob_1 = BitConverter.GetBytes(4);
+                    fBase.Blob_1 = BitConverter.GetBytes(0);
                 } else {
                     // Prepend the 4 byte length :(
-                    byte[] eapSucks = new byte[value.Length + 4];
-                    Buffer.BlockCopy(BitConverter.GetBytes(eapSucks.Length), 0, eapSucks, 0, 4);
-                    Buffer.BlockCopy(value, 0, eapSucks, 4, value.Length);
-                    fBase.Blob_1 = eapSucks;
+                    if (ImageType == ImgType.kJPEG) {
+                        byte[] eapSucks = new byte[value.Length + 4];
+                        Buffer.BlockCopy(BitConverter.GetBytes(value.Length), 0, eapSucks, 0, 4);
+                        Buffer.BlockCopy(value, 0, eapSucks, 4, value.Length);
+                        fBase.Blob_1 = eapSucks;
+                    } else {
+                        fBase.Blob_1 = value;
+                    }
                 }
             }
         }

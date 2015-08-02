@@ -174,7 +174,7 @@ namespace Plasma {
 
         public int? Int32_1 {
             get { return fInt32[0]; }
-            set { fInt32[1] = value; }
+            set { fInt32[0] = value; }
         }
 
         public int? Int32_2 {
