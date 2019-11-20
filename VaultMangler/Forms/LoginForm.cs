@@ -63,6 +63,13 @@ namespace VaultMangler {
                 MessageBox.Show("You must specify a password", "Password Missing", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
+            if (fRemember.Checked) {
+                DialogResult dr = MessageBox.Show(this,
+                    "Your password will be saved in the registry in plain text. Is this OK?",
+                    "Security Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                if (dr != DialogResult.Yes)
+                    return;
+            }
 
             using (RegistryKey key = RegKey) {
                 if (fRemember.Checked) {
