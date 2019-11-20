@@ -19,6 +19,8 @@ namespace Plasma {
             }
         }
 
+        public int G { get; set; } = 41;
+
         public event pnAuthPlayerInfo PlayerInfo;
         public event pnAuthServerAddr ServerAddress;
         public event pnAuthVaultNodeAdded VaultNodeAdded;
@@ -40,7 +42,7 @@ namespace Plasma {
             bs.Flush();
 
             // Encryption
-            if (!base.INetCliConnect(bs, 41))
+            if (!base.INetCliConnect(bs, G))
                 Close();
             bs.Close();
 

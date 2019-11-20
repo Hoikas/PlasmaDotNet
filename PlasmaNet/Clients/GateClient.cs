@@ -9,6 +9,7 @@ using System.Text;
 namespace Plasma {
     public class pnGateClient : plNetClient {
 
+        public int G { get; set; } = 4;
         public pnGateClient() : base() {
             fConnHdr.fType = ENetProtocol.kConnTypeCliToGate;
         }
@@ -21,7 +22,7 @@ namespace Plasma {
             bs.Flush();
 
             // Encryption
-            if (!base.INetCliConnect(bs, 4))
+            if (!base.INetCliConnect(bs, G))
                 Close();
             bs.Close();
 
