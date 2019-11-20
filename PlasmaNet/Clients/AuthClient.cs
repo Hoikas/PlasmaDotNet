@@ -230,6 +230,9 @@ namespace Plasma {
                     case pnAuth2Cli.kAuth2Cli_ServerAddr:
                         IServerAddr();
                         break;
+                    case pnAuth2Cli.kAuth2Cli_ServerCaps:
+                        IServerCaps();
+                        break;
                     case pnAuth2Cli.kAuth2Cli_VaultAddNodeReply:
                         IVaultNodeAddReply();
                         break;
@@ -315,6 +318,11 @@ namespace Plasma {
             notify.Read(fStream);
             if (ServerAddress != null)
                 ServerAddress(notify.fAddress, notify.fToken);
+        }
+
+        private void IServerCaps() {
+            pnAuth2Cli_ServerCaps bcast = new pnAuth2Cli_ServerCaps();
+            bcast.Read(fStream);
         }
 
         private void IVaultNodeAddReply() {

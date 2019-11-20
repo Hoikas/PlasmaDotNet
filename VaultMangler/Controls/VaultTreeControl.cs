@@ -30,31 +30,17 @@ namespace VaultMangler.Controls {
                     pnVaultNode lhs_node = fNodePtr[(uint)lhs.Tag];
                     pnVaultNode rhs_node = fNodePtr[(uint)rhs.Tag];
 
-                    // null nodes are things we've requested but not received
-                    if (lhs_node != null && rhs_node != null) {
-                        if (lhs_node.NodeType == ENodeType.kNodeAgeLink && rhs_node.NodeType == ENodeType.kNodeAgeLink) {
-                            // make sure we actually have age infos
-                            if (lhs.Nodes.Count > 0 && rhs.Nodes.Count > 0) {
-                                // Text should be equal to the age instance name
-                                // if it's not, we're still downloading the vault, so who cares.
-                                return lhs.Nodes[0].Text.CompareTo(rhs.Nodes[0].Text);
-                            }
+                    if (lhs_node.NodeType == ENodeType.kNodeAgeLink && rhs_node.NodeType == ENodeType.kNodeAgeLink) {
+                        // make sure we actually have age infos
+                        if (lhs.Nodes.Count > 0 && rhs.Nodes.Count > 0) {
+                            // Text should be equal to the age instance name
+                            // if it's not, we're still downloading the vault, so who cares.
+                            return lhs.Nodes[0].Text.CompareTo(rhs.Nodes[0].Text);
                         }
                     }
-
-                    // If either node is null, we'll compare their IDs to make it quick
-                    else
-                        return ((uint)lhs.Tag).CompareTo((uint)rhs.Tag);
                 }
 
-                // If we have a null name... good luck
-                if (lhs.Text == null)
-                    return -1;
-                else if (rhs.Text == null)
-                    return 1;
-                else
-                    // Fall back to string sorting
-                    return lhs.Text.CompareTo(rhs.Text);
+                return lhs.Text.CompareTo(rhs.Text);
             }
         }
 
@@ -123,7 +109,7 @@ namespace VaultMangler.Controls {
             InitializeComponent();
 
             // this is slow as tits, so disable it.
-            //fTreeView.TreeViewNodeSorter = new NodeSorter(fVaultNodes);
+            fTreeView.TreeViewNodeSorter = new NodeSorter(fVaultNodes);
 
             // Periodically update while downloading nodes.
             fUpdateTimer.Elapsed += IOnUpdateTime;
@@ -445,6 +431,8 @@ namespace VaultMangler.Controls {
                     if (!fVaultTreeNodes.ContainsKey(nodeRef.fChild))
                         fVaultTreeNodes.Add(nodeRef.fChild, new VaultNodeTreeNodes(nodeRef.fChild));
                     fVaultTreeNodes[nodeRef.fChild].fParentIDs.Add(nodeRef.fParent);
+                    fLog.Debug(String.Format("DBG: Relationship [P: {0}] [C: {1}]",
+                                             nodeRef.fParent, nodeRef.fChild));
                 }
 
                 requests.Add(nodeRef.fParent);
@@ -459,13 +447,18 @@ namespace VaultMangler.Controls {
             lock (fVaultTreeNodes) {
                 lock (fVaultNodes) {
                     fTreeView.BeginUpdate();
-                    foreach (uint nodeID in fPendingNodes) {
-                        IUpdateVaultTreeNode(fVaultNodes[nodeID]);
+                    foreach (pnVaultNode node in fVaultNodes.Values) {
+                        if (node != null)
+                            IUpdateVaultTreeNode(node);
                     }
                     fTreeView.EndUpdate();
-                    fPendingNodes.Clear();
                 }
             }
+
+            // causes weird blinking
+            fTreeView.BeginUpdate();
+            fTreeView.Sort();
+            fTreeView.EndUpdate();
         }
 
         private void ISetIcon(TreeNode tn, VaultIcons icon) {
@@ -490,8 +483,13 @@ namespace VaultMangler.Controls {
                 // Apparently not...
                 foreach (uint childID in vntn.fChildrenIDs) {
                     pnVaultNode childNode;
-                    lock (fVaultNodes)
-                        childNode = fVaultNodes[childID];
+                    lock (fVaultNodes) {
+                        if (!fVaultNodes.TryGetValue(childID, out childNode)) {
+                            // Not present at all means missing from the vault...
+                            fLog.Error(String.Format("ERROR: Dereference failed [P: {0}] [C: {1}]",
+                                                     node.NodeID, childID));
+                        }
+                    }
                     if (childNode != null) {
                         foreach (TreeNode tn in vntn.fTreeNodes)
                             IUpdateOrCreateTreeNode(childNode, tn);
@@ -507,19 +505,21 @@ namespace VaultMangler.Controls {
             else
                 col = parentTreeNode.Nodes;
 
-            TreeNode tn = col[vaultNode.NodeID.ToString()];
-            if (tn == null) {
-                tn = new TreeNode();
-                tn.ContextMenuStrip = fNodeContextMenu;
-                tn.Name = vaultNode.NodeID.ToString();
-                tn.Tag = vaultNode.NodeID;
-                INameTreeNode(tn, vaultNode);
-                col.Add(tn);
-                lock (fVaultTreeNodes)
-                    fVaultTreeNodes[vaultNode.NodeID].fTreeNodes.Add(tn);
-            } else {
-                INameTreeNode(tn, vaultNode);
+            foreach (TreeNode tn in col) {
+                if (tn.Tag.Equals(vaultNode.NodeID)) {
+                    INameTreeNode(tn, vaultNode);
+                    return;
+                }
             }
+
+            TreeNode tn2 = new TreeNode();
+            tn2.ContextMenuStrip = fNodeContextMenu;
+            tn2.Name = vaultNode.NodeID.ToString();
+            tn2.Tag = vaultNode.NodeID;
+            INameTreeNode(tn2, vaultNode);
+            col.Add(tn2);
+            lock (fVaultTreeNodes)
+                fVaultTreeNodes[vaultNode.NodeID].fTreeNodes.Add(tn2);
         }
     }
 

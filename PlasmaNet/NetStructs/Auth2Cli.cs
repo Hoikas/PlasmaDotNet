@@ -79,6 +79,9 @@ namespace Plasma {
         kAuth2Cli_ScoreGetRanksReply,
 
         kAuth2Cli_AccountExistsReply,
+
+        // Extended
+        kAuth2Cli_ServerCaps = 0x1002,
     }
 
     public class pnAuth2Cli_AcctLoginReply : plNetStruct {
@@ -295,6 +298,21 @@ namespace Plasma {
         public override void Write(hsStream s) {
             s.WriteInt((int)fAddress.Address); // Ugh, Cyan
             pnHelpers.WriteUuid(s, fToken);
+        }
+    }
+
+    public class pnAuth2Cli_ServerCaps : plNetStruct {
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_ServerCaps; }
+        }
+
+        public override void Read(hsStream s) {
+            // Just throw this away for now.
+            s.ReadBytes(s.ReadInt());
+        }
+
+        public override void Write(hsStream s) {
+            throw new NotImplementedException();
         }
     }
 
