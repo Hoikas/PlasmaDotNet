@@ -45,7 +45,13 @@ namespace Plasma {
                 if (value == null) return;
 
                 try {
-                    fHost = IPAddress.Parse(value);
+                    if (value.Contains(':')) {
+                        string[] components = value.Split(new char[] { ':' }, 2);
+                        fHost = IPAddress.Parse(components[0]);
+                        fPort = int.Parse(components[1]);
+                    } else {
+                        fHost = IPAddress.Parse(value);
+                    }
                 } catch {
                     IPAddress[] resolve = Dns.GetHostAddresses(value);
                     if (resolve.Length == 0)
