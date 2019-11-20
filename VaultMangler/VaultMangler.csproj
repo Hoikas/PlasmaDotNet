@@ -1,0 +1,272 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{CC98619B-D47C-4349-9661-9449C7027968}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>VaultMangler</RootNamespace>
+    <AssemblyName>VaultMangler</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>VaultMangler.MainForm</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Controls\MarkerNodeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\MarkerNodeControl.Designer.cs">
+      <DependentUpon>MarkerNodeControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\AddChildNodeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AddChildNodeForm.Designer.cs">
+      <DependentUpon>AddChildNodeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ChronicleControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\ChronicleControl.Designer.cs">
+      <DependentUpon>ChronicleControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ImageNodeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\ImageNodeControl.Designer.cs">
+      <DependentUpon>ImageNodeControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\NodeBackedControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\NumericTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\OverallNodeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\OverallNodeControl.Designer.cs">
+      <DependentUpon>OverallNodeControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\PlayerInfoControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\PlayerInfoControl.Designer.cs">
+      <DependentUpon>PlayerInfoControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\TextNoteControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\TextNoteControl.Designer.cs">
+      <DependentUpon>TextNoteControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\AvatarForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AvatarForm.Designer.cs">
+      <DependentUpon>AvatarForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BasicNodeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\BasicNodeControl.Designer.cs">
+      <DependentUpon>BasicNodeControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\VaultTreeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\VaultTreeControl.Designer.cs">
+      <DependentUpon>VaultTreeControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\LoginForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LoginForm.Designer.cs">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\NodeDetailForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\NodeDetailForm.Designer.cs">
+      <DependentUpon>NodeDetailForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServerIni.cs" />
+    <EmbeddedResource Include="Controls\MarkerNodeControl.resx">
+      <DependentUpon>MarkerNodeControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\AddChildNodeForm.resx">
+      <DependentUpon>AddChildNodeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\BasicNodeControl.resx">
+      <DependentUpon>BasicNodeControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ChronicleControl.resx">
+      <DependentUpon>ChronicleControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\ImageNodeControl.resx">
+      <DependentUpon>ImageNodeControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\OverallNodeControl.resx">
+      <DependentUpon>OverallNodeControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\PlayerInfoControl.resx">
+      <DependentUpon>PlayerInfoControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\TextNoteControl.resx">
+      <DependentUpon>TextNoteControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\VaultTreeControl.resx">
+      <DependentUpon>VaultTreeControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\AvatarForm.resx">
+      <DependentUpon>AvatarForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LoginForm.resx">
+      <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\NodeDetailForm.resx">
+      <DependentUpon>NodeDetailForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PlasmaCore\PlasmaCore.csproj">
+      <Project>{3de507b8-43cb-422b-b7b9-775b0d93b98c}</Project>
+      <Name>PlasmaCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PlasmaNet\PlasmaNet.csproj">
+      <Project>{f53b2b34-62c4-4a2a-9262-2e60f10aecc0}</Project>
+      <Name>PlasmaNet</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder_image.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder_user.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\note.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\picture.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\user.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\user_female.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\user_gray.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\user_green.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\user_red.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cog.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\book.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\book_open.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\database.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\book_link.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tag_blue.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\tag_red.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\script_gear.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\sport_golf.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

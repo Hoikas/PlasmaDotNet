@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VaultMangler", "VaultMangler.csproj", "{CC98619B-D47C-4349-9661-9449C7027968}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlasmaNet", "..\PlasmaNet\PlasmaNet.csproj", "{F53B2B34-62C4-4A2A-9262-2E60F10AECC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlasmaCore", "..\PlasmaCore\PlasmaCore.csproj", "{3DE507B8-43CB-422B-B7B9-775B0D93B98C}"
+EndProject
+Global
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CC98619B-D47C-4349-9661-9449C7027968}.Debug|x86.ActiveCfg = Debug|x86
+		{CC98619B-D47C-4349-9661-9449C7027968}.Debug|x86.Build.0 = Debug|x86
+		{CC98619B-D47C-4349-9661-9449C7027968}.Release|x86.ActiveCfg = Release|x86
+		{CC98619B-D47C-4349-9661-9449C7027968}.Release|x86.Build.0 = Release|x86
+		{F53B2B34-62C4-4A2A-9262-2E60F10AECC0}.Debug|x86.ActiveCfg = Debug|x86
+		{F53B2B34-62C4-4A2A-9262-2E60F10AECC0}.Debug|x86.Build.0 = Debug|x86
+		{F53B2B34-62C4-4A2A-9262-2E60F10AECC0}.Release|x86.ActiveCfg = Release|x86
+		{F53B2B34-62C4-4A2A-9262-2E60F10AECC0}.Release|x86.Build.0 = Release|x86
+		{3DE507B8-43CB-422B-B7B9-775B0D93B98C}.Debug|x86.ActiveCfg = Debug|x86
+		{3DE507B8-43CB-422B-B7B9-775B0D93B98C}.Debug|x86.Build.0 = Debug|x86
+		{3DE507B8-43CB-422B-B7B9-775B0D93B98C}.Release|x86.ActiveCfg = Release|x86
+		{3DE507B8-43CB-422B-B7B9-775B0D93B98C}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
