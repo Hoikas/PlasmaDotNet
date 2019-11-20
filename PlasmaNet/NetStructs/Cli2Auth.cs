@@ -173,6 +173,28 @@ namespace Plasma {
         }
     }
 
+    public class pnCli2Auth_FileListRequest : plNetStruct {
+        public uint fTransID;
+        public string fDirectory;
+        public string fExtension;
+
+        protected override object MsgID {
+            get { return (ushort)pnCli2Auth.kCli2Auth_FileListRequest; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fDirectory = pnHelpers.ReadString(s, 260);
+            fExtension = pnHelpers.ReadString(s, 256);
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            pnHelpers.WriteString(s, fDirectory, 260);
+            pnHelpers.WriteString(s, fExtension, 256);
+        }
+    }
+
     public class pnCli2Auth_PingRequest : plNetStruct {
         public uint   fTransID;
         public uint   fPingTimeMs;

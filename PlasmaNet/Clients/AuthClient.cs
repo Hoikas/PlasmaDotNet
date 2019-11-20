@@ -166,6 +166,19 @@ namespace Plasma {
             }
         }
 
+        public void RequestFileList(string directory, string extension, pnCallback cb = null) {
+            pnCli2Auth_FileListRequest req = new pnCli2Auth_FileListRequest();
+            req.fDirectory = directory;
+            req.fExtension = extension;
+            req.fTransID = GetTransID();
+
+            lock (fStream) {
+                if (cb != null)
+                    fCallbacks.Add(req.fTransID, cb);
+                req.Send(fStream);
+            }
+        }
+
         public void SaveVaultNode(pnVaultNode node, pnCallback cb = null) {
             pnCli2Auth_VaultNodeSave req = new pnCli2Auth_VaultNodeSave();
             req.fNode = node;
@@ -207,6 +220,9 @@ namespace Plasma {
                         break;
                     case pnAuth2Cli.kAuth2Cli_ClientRegisterReply:
                         IClientRegistered();
+                        break;
+                    case pnAuth2Cli.kAuth2Cli_FileListReply:
+                        IFileListReply();
                         break;
                     case pnAuth2Cli.kAuth2Cli_PingReply:
                         IPingReply();
@@ -256,6 +272,12 @@ namespace Plasma {
             fSrvChg = reply.fChallenge;
             ILogin(fEvilTemporaryHack.fUser, fEvilTemporaryHack.fPass, fEvilTemporaryHack.fCallback);
             fEvilTemporaryHack = null; // Take out the trash...
+        }
+
+        private void IFileListReply() {
+            pnAuth2Cli_FileListReply reply = new pnAuth2Cli_FileListReply();
+            reply.Read(fStream);
+            FireCallback(reply.fTransID, new object[] { reply.fResult });
         }
 
         private void ILoginReply() {

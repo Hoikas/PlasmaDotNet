@@ -179,6 +179,35 @@ namespace Plasma {
         }
     }
 
+    public class pnAuth2Cli_FileListReply : plNetStruct {
+        public uint fTransID;
+        public ENetError fResult;
+        public byte[] fData;
+
+        protected override object MsgID {
+            get { return (ushort)pnAuth2Cli.kAuth2Cli_FileListReply; }
+        }
+
+        public override void Read(hsStream s) {
+            fTransID = s.ReadUInt();
+            fResult = (ENetError)s.ReadInt();
+            int size = s.ReadInt() * 2;
+            if (size != 0)
+                fData = s.ReadBytes(size);
+        }
+
+        public override void Write(hsStream s) {
+            s.WriteUInt(fTransID);
+            s.WriteInt((int)fResult);
+            if (fData == null || fData.Length == 0) {
+                s.WriteInt(0);
+            } else {
+                s.WriteInt(fData.Length / 2);
+                s.WriteBytes(fData);
+            }
+        }
+    }
+
     public class pnAuth2Cli_KickedOff : plNetStruct {
         public ENetError fReason;
 
@@ -258,7 +287,8 @@ namespace Plasma {
         }
 
         public override void Read(hsStream s) {
-            fAddress = new IPAddress((long)s.ReadInt());
+            int addr = s.ReadInt();
+            //fAddress = new IPAddress(addr);
             fToken = pnHelpers.ReadUuid(s);
         }
 
