@@ -336,118 +336,23 @@ namespace Plasma {
 
     public sealed class pnVaultMarkerListNode : pnVaultNodeAccess {
 
-        // TODO: Find/Create an enum for me?
-        public int GameType {
-            get {
-                if (fBase.Int32_1.HasValue)
-                    return fBase.Int32_1.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.Int32_1 = value; }
-        }
-
-        public int RoundLength {
-            get {
-                if (fBase.Int32_2.HasValue)
-                    return fBase.Int32_2.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.Int32_2 = value; }
-        }
-
-        public string OwnerName {
-            get { return fBase.String64_1; }
-            set { fBase.String64_1 = value; }
-        }
-
-        public pnVaultMarkerListNode() : base(ENodeType.kNodeMarkerList) { }
-        public pnVaultMarkerListNode(pnVaultNode node) : base(node) { }
-    }
-
-    public sealed class pnVaultMarkerNode : pnVaultNodeAccess {
-
-        public string AgeName {
-            get { return fBase.CreateAgeName; }
-            set { fBase.CreateAgeName = value; }
-        }
-
-        public int Torans {
-            get {
-                if (fBase.Int32_1.HasValue)
-                    return fBase.Int32_1.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.Int32_1 = value; }
-        }
-
-        public int HSpans {
-            get {
-                if (fBase.Int32_2.HasValue)
-                    return fBase.Int32_2.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.Int32_2 = value; }
-        }
-
-        public int VSpans {
-            get {
-                if (fBase.Int32_3.HasValue)
-                    return fBase.Int32_3.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.Int32_3 = value; }
-        }
-
-        public uint PosX {
-            get {
-                if (fBase.UInt32_1.HasValue)
-                    return fBase.UInt32_1.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.UInt32_1 = value; }
-        }
-
-        public uint PosY {
-            get {
-                if (fBase.UInt32_2.HasValue)
-                    return fBase.UInt32_2.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.UInt32_2 = value; }
-        }
-
-        public uint PosZ {
-            get {
-                if (fBase.UInt32_3.HasValue)
-                    return fBase.UInt32_3.Value;
-                else
-                    return 0;
-            }
-
-            set { fBase.UInt32_3 = value; }
-        }
-
-        public string MarkerText {
+        public string GameName {
             get { return fBase.Text_1; }
             set { fBase.Text_1 = value; }
         }
 
-        public pnVaultMarkerNode() : base(ENodeType.kNodeMarker) { }
-        public pnVaultMarkerNode(pnVaultNode node) : base(node) { }
+        public string GameReward {
+            get { return fBase.Text_2; }
+            set { fBase.Text_2 = value; }
+        }
+
+        public byte[] GameData {
+            get { return fBase.Blob_1; }
+            set { fBase.Blob_1 = value; }
+        }
+
+        public pnVaultMarkerListNode() : base(ENodeType.kNodeMarkerList) { }
+        public pnVaultMarkerListNode(pnVaultNode node) : base(node) { }
     }
 
     public sealed class pnVaultPlayerInfoNode : pnVaultNodeAccess {
