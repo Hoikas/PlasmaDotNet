@@ -83,6 +83,7 @@ namespace VaultMangler.Controls {
             get { return fPlayerID; }
             set {
                 Cleanup();
+                SetStatus("Fetching VNodeMgr Tree...");
                 fPlayerID = value;
                 fClient.FetchVaultNodeRefs(value, new pnCallback(new pnAuthVaultNodeRefsFetched(INodeTreeFetched), value));
             }
@@ -96,6 +97,8 @@ namespace VaultMangler.Controls {
                 return null;
             }
         }
+
+        public event Action<string> SetStatus;
 
         plDebugLog fLog = plDebugLog.GetLog("vault");
         Dictionary<uint, pnVaultNode> fVaultNodes = new Dictionary<uint, pnVaultNode>();
@@ -191,15 +194,6 @@ namespace VaultMangler.Controls {
             fUpdateTimer.Enabled = true;
             fClient.FetchVaultNode(nodeID, new pnCallback(new pnAuthVaultNodeFetched(INodeDownloaded), nodeID));
             fLog.Debug(String.Format("DBG: Issued download [ID: {0}]", nodeID));
-        }
-
-        private TreeNode IGenerateTreeNode(pnVaultNode vaultNode) {
-            TreeNode tn = new TreeNode();
-            tn.ContextMenuStrip = fNodeContextMenu;
-            tn.Name = vaultNode.NodeID.ToString();
-            tn.Tag = vaultNode.NodeID;
-            INameTreeNode(tn, vaultNode);
-            return tn;
         }
 
         private string IGetStandardNodeName(pnVaultNode node) {
@@ -405,12 +399,15 @@ namespace VaultMangler.Controls {
 
             // Pumping the node tree is slow, so wait until the entire vault is downloaded.
             if (numDLoads == 0) {
+                SetStatus("");
                 fLog.Debug("DBG: All node downloads complete, updating tree...");
                 fUpdateTimer.Enabled = false;
                 if (InvokeRequired)
                     BeginInvoke(new Action(INodeTreeUpdate));
                 else
                     INodeTreeUpdate();
+            } else if ((numDLoads % 3) == 0) {
+                SetStatus(String.Format("Downloading Vault Nodes ({0} remaining)...", numDLoads));
             }
         }
 
@@ -423,7 +420,7 @@ namespace VaultMangler.Controls {
                         if (isRoot)
                             fLog.Debug(String.Format("DBG: root level node [ID: {0}]", nodeRef.fParent));
                         else
-                            fLog.Error(String.Format("ERROR: orphaned node [ID: {0}]", nodeRef.fParent));
+                            fLog.Warn(String.Format("WRN: potentially orphaned node [ID: {0}]", nodeRef.fParent));
                         fVaultTreeNodes.Add(nodeRef.fParent, new VaultNodeTreeNodes(nodeRef.fParent, isRoot));
                     }
 

@@ -25,6 +25,7 @@ namespace VaultMangler {
             InitializeComponent();
 
             fVaultTree.AuthCli = fAuthCli;
+            fVaultTree.SetStatus += SetStatus;
             fNodeControl.AuthCli = fAuthCli;
             fNodeControl.VaultTree = fVaultTree; // hax?
 
@@ -65,7 +66,7 @@ namespace VaultMangler {
                     // Looks good here... time to login
                     fLoginMenuItem.Visible = false;
                     fLogoutMenuItem.Visible = true;
-                    SetStatus("Logging into " + lf.Shard.ToString());
+                    SetStatus(String.Format("Logging into {0}...", lf.Shard.ToString()));
                     ILogin(lf.Account, lf.Password, lf.Shard);
                     break;
             }
@@ -198,10 +199,12 @@ namespace VaultMangler {
             if (fTempHoldingAvatars.Count > 0) {
                 AvatarForm af = new AvatarForm();
                 af.Avatars = fTempHoldingAvatars.ToArray();
-                if (af.ShowDialog(this) == DialogResult.OK)
+                if (af.ShowDialog(this) == DialogResult.OK) {
+                    SetStatus(String.Format("Setting Active VNodeMgr ID:{0}...", af.PlayerID));
                     fAuthCli.SetPlayer(af.PlayerID, new pnCallback(new pnAuthPlayerSet(IOnPlayerSet), af.PlayerID));
-                else
+                } else {
                     IDisconnect();
+                }
             } else {
                 IDisconnect();
                 ILoginFailed(ENetError.kNetErrPlayerNotFound);
